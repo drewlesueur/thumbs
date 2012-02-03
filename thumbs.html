@@ -1,0 +1,186 @@
+<!doctype html>
+<style>
+  * {
+    font-family: Menlo, 'Bitstream Vera Sans Mono', 'DejaVu Mono', 'Monospace'
+  }
+</style>
+<script type="text/x-thumbs">
+$ everything is a function that does what it does??
+$ or simple goto
+mytext $
+  this is a totally cool
+  string that is verry long
+
+mytext2 $ this is another text not as big
+
+sayHi * name age
+  Say $ hi $name. You are $age years old
+
+snowman #
+  eyes $carrots
+  body $snow
+
+snowman.mouth $pipe
+
+
+mylist + long list of stuff
+
+myname $ Drew LeSueur
+myage 27
+SayHi myname myage
+
+answer Add 7 5
+
+</script>
+<h1>Thumbs. A simple programming language</h1>
+What the symbols mean
+<pre class="legend" style="font-size: 40px">
+* function
+# map (hash)
++ list (array)
+$ text (string)
+</pre>
+
+A Hello world
+
+
+<script type="text/javascript">
+
+  var splitText = function (text) {
+    text = text.split(" ");
+    return text
+  }
+
+  var parse = function(configs) {
+    var a, b, config, currentObj, currentSpaceLen, final, i, lastIndex, lastThingAdded, match, newCurrentObj, objectStack, ret, spaceLen, text, _i, _len, _ref;
+    configs = configs.split("\n");
+    final = {};
+    currentSpaceLen = -2;
+    lastThingAdded = ["do"];
+    currentObj = [lastThingAdded];
+    lastIndex = 0;
+    objectStack = [currentObj];
+    for (_i = 0, _len = configs.length; _i < _len; _i++) {
+      config = configs[_i];
+      match = config.match(/^(\s*)([^\s].*)/);
+      if (!match) continue;
+      if ((match != null ? match.length : void 0) < 3) continue;
+      spaceLen = match[1].length / 2;
+      text = match[2];
+      text = splitText(text)
+      text.unshift(_i) // for line numbers
+      if (spaceLen === currentSpaceLen) {
+        currentObj.push(text);
+        lastThingAdded = text;
+        lastIndex = currentObj.length - 1;
+      } else if (spaceLen > currentSpaceLen) {
+        currentSpaceLen = spaceLen;
+        newCurrentObj = [lastThingAdded];
+        currentObj[lastIndex] = newCurrentObj;
+        currentObj = newCurrentObj;
+        currentObj.push(text);
+        lastThingAdded = text;
+        lastIndex = currentObj.length - 1;
+        objectStack.push(currentObj);
+      } else if (spaceLen < currentSpaceLen) {
+        for (i = 0, _ref = currentSpaceLen - spaceLen; 0 <= _ref ? i <= _ref : i >= _ref; 0 <= _ref ? i++ : i--) {
+          currentObj = objectStack.pop();
+        }
+        try {
+          currentObj.push(text);
+        } catch (e) {
+          a = 1;
+        }
+        objectStack.push(currentObj);
+        currentSpaceLen = spaceLen;
+        lastThingAdded = text;
+        lastIndex = currentObj.length - 1;
+      }
+    }
+    window.os = objectStack;
+    window.co = currentObj;
+    ret = objectStack[0] || currentObj;
+    console.log(ret);
+    return ret[0];
+  };
+
+  var scope = {
+    "say": function (x) {
+      alert(x)
+    },
+    "do": function () {},
+    "add": function (a, b) {
+      return a + b;
+    } 
+  }  
+  window.scope = scope;
+  var currentScope = scope;
+  var scopeStack = [];
+  window.scopeStack = scopeStack;
+  window.currentScope = currentScope;
+
+  var execLine = function (line) {
+    var nestedArgs = []
+    if (line[0] - 0 === line[0]) {
+      //no nested args
+    } else {
+      nestedArgs = line.slice(1)   
+      line = line[0];
+    }
+    var lineNumber = line[0]
+    var first = line[1];
+    var second = line[2];
+    var rest = line.slice(3);
+    var value; 
+
+    var setString = function () {
+      console.log("(setting a string)")
+      for (var i = 0; i < nestedArgs.length; i++) {
+        nestedArgs[i] = nestedArgs[i].slice(1).join(" ") //slice to remove line number
+      } 
+      value = nestedArgs.join("\n")
+    }
+
+    var setValue = function () {
+      console.log("(setting a value)");
+      if (second == "$") { //todo. do a faster way of converting to string //cache or something
+        setString()
+      }
+      console.log ("Setting " + first + " to " + value)
+      currentScope[first] =  value;
+    }
+
+    console.log(originalLines[lineNumber])
+    if (first == "$") {
+      console.log("(skipping)")
+    }
+    if (first.match(/^[a-z]/)) {
+      setValue()
+    } else if (first.match(/^[A-Z]/)) {
+      console.log("(calling a function)")
+    }
+  }
+  
+  var originalLines;
+  var parsed;
+  var run = function (code) {
+     parsed = parse(code);
+     originalLines = code.split("\n")
+     console.log(parsed);
+     for (var i = 1; i < parsed.length; i++) {
+       var line = parsed[i];
+       execLine(line);
+     }
+  }
+
+  var start = function () {
+    var codes = document.querySelectorAll('[type="text/x-thumbs"]')
+    console.log(codes);
+    for (var i = 0; i < codes.length; i++) {
+      var code = codes[i].innerHTML.slice(1)
+      run(code)
+    }
+  }
+</script>
+<body onload="start()">
+</body>
