@@ -5,6 +5,17 @@
   }
 </style>
 <script type="text/x-thumbs">
+sayMessage * message
+  Say message 
+
+message $ my message
+SayMessage message
+
+answer Add 1 2
+Say answer
+
+</script>
+<script type="text/x-thumbs-2">
 $ everything is a function that does what it does??
 $ or simple goto
 mytext $
@@ -177,9 +188,12 @@ A Hello world
         setFunction()
       } else if (second.match(/\d+/)) {
         setNumber() 
+      } else if (second.match(/^[A-Z]/)) {
+        setFuncCall(); 
       }
       console.log ("Setting " + first + " to " + value)
       currentScope[first.toLowerCase()] =  value;
+      return value
     }
     
 
@@ -204,14 +218,19 @@ A Hello world
           fn.scope[argVarName] = argValue;
         }
       } 
-
       return runParsed(fn.body, fn.scope)
+    }
+    
+    var setFuncCall = function () { //todo: maybe pass arguments here 
+      var name = first  
+      first = second
+      second = rest[0]
+      rest = rest.slice(1)
+      value = callFunction()
+      currentScope[name] = value 
     }
 
     var callFunction = function () {
-      if (second == "age") {
-        var breakPoint = 1;  
-      } 
       fn = get(first.toLowerCase()) 
       console.log("The function is ")
       console.log(first)
@@ -226,6 +245,7 @@ A Hello world
     }
 
     //TODO: get can be an object! change
+    //TODO: also include getter and setter options
     var get = function (name, lookupScope) {
       if (isObject(name)) {
         var a = 1; 
@@ -233,7 +253,10 @@ A Hello world
 
       if (name.charAt(0) == "$") {
         return name.substring(1) 
+      } else if (name.match(/\d+/)) {
+        return name - 0
       }
+
       name = name.toLowerCase()
       lookupScope = lookupScope || currentScope;
       if (name in lookupScope) {
