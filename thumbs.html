@@ -17,7 +17,7 @@ message $ hi
 Say message
 Say $HelloWorld
 sayHi * name age
-  Say $ hi $name. You are $age years old
+  Say age
 
 snowman #
   eyes $carrots
@@ -92,7 +92,7 @@ A Hello world
         try {
           currentObj.push(text);
         } catch (e) {
-          a = 1;
+
         }
         objectStack.push(currentObj);
         currentSpaceLen = spaceLen;
@@ -127,9 +127,13 @@ A Hello world
   var isFunction = function (obj) {
     return toString.call(obj) == '[object Function]';
   }
+  var isObject = function (obj) {
+    return obj === Object(obj);
+  }
+
   var __slice = Array.prototype.slice;
 
-  var execLine = function (line) {
+  var execLine = function (line, currentScope) {
     var nestedArgs = []
     if (line[0] - 0 === line[0]) {
       //no nested args
@@ -155,10 +159,13 @@ A Hello world
       value = second - 0 
     }
     var setFunction = function () {
+      var newScope = {}
+      newScope.parentScope = currentScope
       value = {
-        scope: currentScope,
+        scope: newScope,
         type: "fn",
-        args: rest
+        args: rest,
+        body: nestedArgs
       }
     }
 
@@ -172,37 +179,67 @@ A Hello world
         setNumber() 
       }
       console.log ("Setting " + first + " to " + value)
-      currentScope[first] =  value;
+      currentScope[first.toLowerCase()] =  value;
     }
+    
+
+    var callJSFunction = function () {
+      rest = [second].concat(__slice.call(rest))
+      for (var i = 0; i < rest.length; i++) {
+        rest[i] = get(rest[i]) 
+      } 
+      //todo, convert objs and fns to js objs and fns
+      return fn.apply(null, rest);
+    }
+    
+    var callThumbsFunction = function (fn) {
+      rest = [second].concat(__slice.call(rest))
+      var args = []
+      for (var i = 0; i < rest.length; i++) {
+        var varName = rest[i]
+        var argVarName = fn.args[i] 
+        var argValue = get(varName, currentScope)
+        args.push(argValue);
+        if (argVarName) {
+          fn.scope[argVarName] = argValue;
+        }
+      } 
+
+      return runParsed(fn.body, fn.scope)
+    }
+
     var callFunction = function () {
+      if (second == "age") {
+        var breakPoint = 1;  
+      } 
       fn = get(first.toLowerCase()) 
       console.log("The function is ")
       console.log(first)
       console.log(fn)
-
-
       console.log("+++++++")
       console.log(rest[0])
       if (isFunction(fn)) {
-        rest = [second].concat(__slice.call(rest))
-        for (var i = 0; i < rest.length; i++) {
-          rest[i] = get(rest[i]) 
-        } 
-        //todo, convert objs and fns to js objs and fns
-        fn.apply(null, rest);
-        //fn second, rest...
+        return callJSFunction()
+      } else if (fn.type == "fn") {
+        return callThumbsFunction(fn)  
       }
     }
+
     //TODO: get can be an object! change
     var get = function (name, lookupScope) {
+      if (isObject(name)) {
+        var a = 1; 
+      }
+
       if (name.charAt(0) == "$") {
         return name.substring(1) 
       }
+      name = name.toLowerCase()
       lookupScope = lookupScope || currentScope;
-      if (name in currentScope) {
-        return currentScope[name] 
-      } else if (currentScope.parentScope) {
-        return get(lookupScope, currentScope.parentScope) 
+      if (name in lookupScope) {
+        return lookupScope[name] 
+      } else if (lookupScope.parentScope) {
+        return get(name, lookupScope.parentScope) 
       } else {
         return null;
       }
@@ -211,24 +248,23 @@ A Hello world
     console.log(originalLines[lineNumber])
     if (first == "$") {
       console.log("(skipping)")
-    }
-    if (first.match(/^[a-z]/)) {
+    } else if (first.match(/^[a-z]/)) {
       setValue()
     } else if (first.match(/^[A-Z]/)) {
       console.log("(calling a function)")
-      callFunction()
+      return callFunction()
     }
   }
   
   var originalLines;
   var parsed;
 
-  var runParsed = function (code, theScope) {
+  var runParsed = function (parsed, theScope) {
      theScope = theScope || currentScope
      var last;
      for (var i = 0; i < parsed.length; i++) {
        var line = parsed[i];
-       last = execLine(line);
+       last = execLine(line, theScope);
      }
      return last
   }
@@ -238,7 +274,7 @@ A Hello world
      originalLines = code.split("\n")
      console.log(parsed);
      parsed = parsed.slice(1)
-     runParsed(code);
+     runParsed(parsed);
   }
 
   var start = function () {
@@ -253,4 +289,5 @@ A Hello world
 </script>
 <body onload="start()">
   //todo. objects as keys
+  //todo. splats! and create a new function with scope
 </body>
