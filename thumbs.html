@@ -6,9 +6,11 @@
 </style>
 <script type="text/x-thumbs">
 
+$defining a function
 adding * x y
   Add x y
 
+$ setting a variable to the result of a function call
 added Adding 1 5
 Eq added 6
 
@@ -16,6 +18,7 @@ $ showing calling functions in a row
 negative Neg Add 5 6
 Eq negative -11
 
+$ a closure
 incmaker *
   x 0
   inc *
@@ -31,20 +34,25 @@ Eq c 3
 
 $ closure without stars for functions
 incmaker2
-  x 0
+  x 10
   inc
-    x Add 1 x
+    x Add 2 x
+
+$ coffeescript version
+  incMaker = ->
+    x = 10
+    inc = ->
+      x = x + 2
 
 inc2 Incmaker2
 a Inc2
 b Inc2
 c Inc2
-Eq a 1
-Eq b 2
-Eq c 3
+Eq a 12
+Eq b 14
+Eq c 16
 
 $ multiline strings
-
 multiliner $
   My name is Drew!
   This should be multi line
@@ -57,6 +65,21 @@ info $ $name is $age years old.
 realInfo $ Drew LeSueur is 27 years old.
 Eq info realInfo
 
+
+$ assigning one variable to another
+answer 2001
+theAnswer answer
+Eq theAnswer 2001
+Eq answer 2001
+
+$ maps (hashes)
+snowman #
+  name $ Mr. Snowman
+  nose $carrots
+  numberofcoals Add 2 4
+
+snowmanName $ Mr. Snowman
+Eq snowman.name snowmanName
 
 message $ all done
 Say message
@@ -277,7 +300,10 @@ A Hello world
         setFuncCall(first, second, rest); 
       } else if (!second && nestedArgs.length) {
         setFunction() 
+      } else {
+        value = get(second) 
       }
+
       console.log ("Setting " + first + " to " + value)
       first = first.toLowerCase()
       var settingScope = findScopeWithName(first, currentScope)
@@ -426,7 +452,5 @@ A Hello world
 <body onload="start()">
   //todo. objects as keys
   //todo. splats! and create a new function with scope
-  //todo. String interpolation
-  //todo. make sure simple incmaker closure works
-  //setting should try to find the existing one's scope first!!
+  //dynamically set a variable to the current scope
 </body>
