@@ -16,15 +16,47 @@ $ showing calling functions in a row
 negative Neg Add 5 6
 Eq negative -11
 
-
-incmaker * y
+incmaker *
   x 0
-  inc * y
+  inc *
     x Add 1 x
 
 inc Incmaker
-Say Inc
-Say Inc
+a Inc
+b Inc
+c Inc
+Eq a 1
+Eq b 2
+Eq c 3
+
+$ closure without stars for functions
+incmaker2
+  x 0
+  inc
+    x Add 1 x
+
+inc2 Incmaker2
+a Inc2
+b Inc2
+c Inc2
+Eq a 1
+Eq b 2
+Eq c 3
+
+$ multiline strings
+
+multiliner $
+  My name is Drew!
+  This should be multi line
+Say multiliner
+
+$ interpolation of strings
+name $ Drew LeSueur
+age 27
+info $ $name is $age years old.
+realInfo $ Drew LeSueur is 27 years old.
+Eq info realInfo
+
 
 message $ all done
 Say message
@@ -203,6 +235,9 @@ A Hello world
       } 
       value = rest.join(" ") 
       value += nestedArgs.join("\n")
+      value = value.replace(/\$([\w]+)/g, function (whole, word) {
+        return get(word) 
+      })
     }
     var setNumber = function () {
       value = second - 0 
@@ -238,8 +273,10 @@ A Hello world
         setFunction()
       } else if ((second - 0) == second) {
         setNumber() 
-      } else if (second.match(/^[A-Z]/)) {
+      } else if (second && second.match(/^[A-Z]/)) {
         setFuncCall(first, second, rest); 
+      } else if (!second && nestedArgs.length) {
+        setFunction() 
       }
       console.log ("Setting " + first + " to " + value)
       first = first.toLowerCase()
