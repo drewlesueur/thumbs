@@ -256,24 +256,27 @@ A Hello world
       for (var i = 0; i < nestedArgs.length; i++) {
         nestedArgs[i] = nestedArgs[i].slice(1).join(" ") //slice to remove line number
       } 
-      value = rest.join(" ") 
+      var value = rest.join(" ") 
       value += nestedArgs.join("\n")
       value = value.replace(/\$([\w]+)/g, function (whole, word) {
         return get(word) 
       })
+      return value;
     }
     var setNumber = function () {
-      value = second - 0 
+      var value = second - 0 
+      return value
     }
     var setFunction = function () {
       var newScope = {}
       newScope.parentScope = currentScope
-      value = {
+      var value = {
         scope: newScope,
         type: "fn",
         args: rest,
         body: nestedArgs
       }
+      return value
     }
 
 
@@ -291,15 +294,15 @@ A Hello world
     var setValue = function () {
       console.log("(setting a value)");
       if (second == "$") { //todo. do a faster way of converting to string //cache or something
-        setString()
+        value = setString()
       } else if (second == "*") {
-        setFunction()
+        value = setFunction()
       } else if ((second - 0) == second) {
-        setNumber() 
+        value = setNumber() 
       } else if (second && second.match(/^[A-Z]/)) {
-        setFuncCall(first, second, rest); 
+        value = setFuncCall(first, second, rest); 
       } else if (!second && nestedArgs.length) {
-        setFunction() 
+        value = setFunction() 
       } else {
         value = get(second) 
       }
@@ -349,7 +352,8 @@ A Hello world
       var first = second
       var second = rest[0]
       var rest = rest.slice(1)
-      value = callFunction(first, second, rest)
+      var value = callFunction(first, second, rest)
+      return value;
     }
 
     var callFunction = function (first, second, rest) {
