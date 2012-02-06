@@ -85,6 +85,9 @@ Eq nose $notCarrots
 Eq snowman.nose $carrots
 Eq snowman.numberOfCoals 6
 
+myProp $nose
+Eq snowman:myProp $carrots
+
 message $ all done
 Say message
 
@@ -430,6 +433,9 @@ A Hello world
       var symbol = symbols[0];
       var names = names.slice(1)
       var symbols = symbols.slice(1)
+      if (symbol == ":") { //either . or :
+        name = get(name, originalScope) 
+      }
       var value = get(name, lookupScope)
       return chainGet(names, symbols, value, originalScope);
     }
