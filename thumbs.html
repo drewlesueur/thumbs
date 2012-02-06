@@ -203,7 +203,7 @@ A Hello world
     return ret[0];
   };
 
-  var scope = {
+  var rawScope = {
     "say": function (x) {
       alert(x)
     },
@@ -218,9 +218,14 @@ A Hello world
     },
     neg: function (a) {
       return -a 
-    },
-    parentScope: null
+    }
   }  
+
+  var scope = {
+    body: rawScope,
+    parentScope: null
+  }
+
   window.scope = scope;
   var currentScope = scope;
   var scopeStack = [];
@@ -271,8 +276,10 @@ A Hello world
 
 
     var setFunction = function (nestedArgs) {
-      var newScope = {}
-      newScope.parentScope = currentScope
+      var newScope = {
+        body: {},
+        parentScope: currentScope
+      }
       var value = {
         scope: newScope,
         type: "fn",
@@ -305,7 +312,7 @@ A Hello world
 
     var findScopeWithName = function(name, lookupScope, originalLookupScope) {
       originalLookupScope = originalLookupScope || lookupScope
-      if (name in lookupScope) {
+      if (name in lookupScope.body) {
         return lookupScope
       } else if (lookupScope.parentScope) {
         return findScopeWithName(name, lookupScope.parentScope, originalLookupScope) 
@@ -344,7 +351,7 @@ A Hello world
       } else {
         var settingScope = findScopeWithName(name, currentScope)
       }
-      settingScope[name] =  value;
+      settingScope.body[name] =  value;
       //todo make an option for always setting the current scope
       //like var is in javascript
       return value
@@ -373,7 +380,7 @@ A Hello world
         var argValue = get(varName, currentScope)
         args.push(argValue);
         if (argVarName) {
-          fn.scope[argVarName] = argValue;
+          fn.scope.body[argVarName] = argValue;
         }
         fn.scope.args = args
       } 
@@ -437,8 +444,8 @@ A Hello world
       }
 
       lookupScope = lookupScope || currentScope;
-      if (name in lookupScope) {
-        return lookupScope[name] 
+      if (name in lookupScope.body) {
+        return lookupScope.body[name] 
       } else if (lookupScope.parentScope) {
         return get(name, lookupScope.parentScope) 
       } else {
