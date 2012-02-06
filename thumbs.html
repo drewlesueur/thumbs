@@ -73,6 +73,7 @@ Eq theAnswer 2001
 Eq answer 2001
 
 $ maps (hashes)
+nose $notCarrots
 snowman #
   name $ Mr. Snowman
   nose $carrots
@@ -80,6 +81,9 @@ snowman #
 
 snowmanName $ Mr. Snowman
 Eq snowman.name snowmanName
+Eq nose $notCarrots
+Eq snowman.nose $carrots
+Eq snowman.numberOfCoals 6
 
 message $ all done
 Say message
@@ -87,6 +91,11 @@ Say message
 </script>
 
 <script type="text/x-thumbs-2">
+myProp $eyes
+person:myProp
+person.eyes
+Eq person.eyes person:myProp
+
 incMaker *
   x 0
   inc *
@@ -199,7 +208,6 @@ A Hello world
     window.os = objectStack;
     window.co = currentObj;
     ret = objectStack[0] || currentObj;
-    console.log(ret);
     return ret[0];
   };
 
@@ -242,7 +250,7 @@ A Hello world
 
   var __slice = Array.prototype.slice;
 
-  var execLine = function (line, currentScope) {
+  var execLine = function (line, currentScope, opts) {
     var nestedArgs = []
     if (line[0] - 0 === line[0]) {
       //no nested args
@@ -255,10 +263,8 @@ A Hello world
     var second = line[2];
     var rest = line.slice(3);
     var value; 
-    var onlySetInCurrentScope = false
 
     var setString = function () {
-      console.log("(setting a string)")
       for (var i = 0; i < nestedArgs.length; i++) {
         nestedArgs[i] = nestedArgs[i].slice(1).join(" ") //slice to remove line number
       } 
@@ -292,14 +298,15 @@ A Hello world
     var setMap = function (nestedArgs) {
       //TODO: hmmmm!!! 
       var fn = setFunction(nestedArgs);
-      onlySetInCurrentScope = true
-      callThumbsFunction(fn, [], {})
-      onlySetInCurrentScope = false;
+      var opts = {
+        onlySetInCurrentScope: true      
+      }
+      callThumbsFunction(fn, [], {}, opts)
       delete fn.scope.parentScope;
       var value = {
         type: "map",
-        body: fn.scope,
-        prototype: "", //TODO: should object
+        body: fn.scope.body,
+        parentScope: "", //TODO: should object
         getters: "", //?
         setters: "", //?
         notFound: "", //?
@@ -322,7 +329,6 @@ A Hello world
     }
 
     var setValue = function () {
-      console.log("(setting a value)");
       //TODO: pass in first and rest and nested args and stuff
       if (second == "$") { //todo. do a faster way of converting to string //cache or something
         value = setString()
@@ -340,13 +346,12 @@ A Hello world
         value = get(second) 
       }
 
-      console.log ("Setting " + first + " to " + value)
       return set(first, value, currentScope)
     }
 
     var set = function (name, value, currentScope) {
       name = name.toLowerCase()
-      if (onlySetInCurrentScope) {
+      if (opts && opts.onlySetInCurrentScope) {
         var settingScope = currentScope;
       } else {
         var settingScope = findScopeWithName(name, currentScope)
@@ -372,7 +377,7 @@ A Hello world
       return fn.apply(null, rest);
     }
     
-    var callThumbsFunction = function (fn, rest, currentScope) {
+    var callThumbsFunction = function (fn, rest, currentScope, opts) {
       var args = []
       for (var i = 0; i < rest.length; i++) {
         var varName = rest[i]
@@ -384,7 +389,7 @@ A Hello world
         }
         fn.scope.args = args
       } 
-      return runParsed(fn.body, fn.scope)
+      return runParsed(fn.body, fn.scope, opts)
     }
     
     var setFuncCall = function (first, second, rest) { //todo: maybe pass arguments here 
@@ -401,11 +406,6 @@ A Hello world
     //TODO? pass currentScope in here?
     var callFunction = function (first, second, rest) {
       var fn = get(first.toLowerCase()) 
-      console.log("The function is ")
-      console.log(first)
-      console.log(fn)
-      console.log("+++++++")
-      console.log(rest[0])
 
       if (second && second.match(/^[A-Z]/)) {
         var ret = callFunction(second, rest[0], rest.slice(1))
@@ -420,10 +420,26 @@ A Hello world
         return callThumbsFunction(fn, rest, currentScope)  
       }
     }
+    
+
+    var chainGet = function (names, symbols, lookupScope, originalScope) {
+      if (names.length == 0) {
+        return lookupScope;
+      }
+      var name = names[0]
+      var symbol = symbols[0];
+      var names = names.slice(1)
+      var symbols = symbols.slice(1)
+      var value = get(name, lookupScope)
+      return chainGet(names, symbols, value, originalScope);
+    }
+
 
     //TODO: get can be an object! change
     //TODO: also include getter and setter options
     var get = function (name, lookupScope) {
+      lookupScope = lookupScope || currentScope;
+
       if (!name) {
         return name
       }
@@ -443,7 +459,13 @@ A Hello world
         var b = 1; 
       }
 
-      lookupScope = lookupScope || currentScope;
+      var names = name.split(/\.|\:/)
+      if (names.length > 1) {
+        var symbols = name.match(/\.|\:/g)
+        symbols.unshift(".")
+        return chainGet(names, symbols, lookupScope, lookupScope)
+      }
+
       if (name in lookupScope.body) {
         return lookupScope.body[name] 
       } else if (lookupScope.parentScope) {
@@ -454,13 +476,11 @@ A Hello world
     } 
     
     originalLine = originalLines[lineNumber]
-    console.log(originalLine)
     if (first == "$") {
-      console.log("(skipping)")
+
     } else if (first.match(/^[a-z]/)) {
       return setValue()
     } else if (first.match(/^[A-Z]/)) {
-      console.log("(calling a function)")
       return callFunction(first, second, rest)
     }
   }
@@ -468,12 +488,12 @@ A Hello world
   var originalLines;
   var parsed;
 
-  var runParsed = function (parsed, theScope) {
+  var runParsed = function (parsed, theScope, opts) {
      theScope = theScope || currentScope
      var last;
      for (var i = 0; i < parsed.length; i++) {
        var line = parsed[i];
-       last = execLine(line, theScope);
+       last = execLine(line, theScope, opts);
      }
      return last
   }
@@ -481,14 +501,12 @@ A Hello world
   var run = function (code) {
      parsed = parse(code);
      originalLines = code.split("\n")
-     console.log(parsed);
      parsed = parsed.slice(1)
      runParsed(parsed);
   }
 
   var start = function () {
     var codes = document.querySelectorAll('[type="text/x-thumbs"]')
-    console.log(codes);
     for (var i = 0; i < codes.length; i++) {
       var code = codes[i].innerHTML.slice(1)
       run(code)
@@ -502,5 +520,6 @@ A Hello world
   //dynamically set a variable to the current scope
   // getters and setters. and propertymissings
   // allow for easy "Say $ hello wolrd"
-  //maybe make "parentScope" "____parentScope", or have one more level of indirection?
+  //one more level of indirection for strings and numbers?
+  //tail call optimization
 </body>
