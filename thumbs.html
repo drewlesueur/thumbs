@@ -6,7 +6,7 @@
 </style>
 <script type="text/x-thumbs">
 
-$defining a function
+$ defining a function
 adding * x y
   Add x y
 
@@ -170,6 +170,10 @@ $ TODO: tail call optimization
 
 saying * message
   Say message
+
+ret Adding
+  1 2
+Eq ret 4
 
 Saying $ almost done
 
@@ -488,6 +492,8 @@ A Hello world
     var compileFunction = function (fn, rest, nestedArgs, currentScope, opts) {
       //TODO: some of this compiling could be done when it
       //first parses?
+      // or cache some of this stuff here
+
       var newScope = {
         body: {},
         parentScope: fn.scope //js func wont have scope but oh well
