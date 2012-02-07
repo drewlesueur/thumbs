@@ -116,12 +116,10 @@ $ todo: do this to
   MyCoolFunc a b
     c d e
 
-$ hmmm??
-  MyCoolFunc 
 
-$
+$ TODO: something like this (look at nestedArgs when you are compiling a func)
   SomeFuncCall
-    #myfunc 
+    #
       fun $times
     * success
       DO the success
@@ -129,6 +127,9 @@ $
       DO the error
     $
       the string stuff
+    anotherArg andAnotherArg
+    andAnother
+    AndAFunctionCall forArg
    
   Loop collection * x
     print x
@@ -136,18 +137,27 @@ $
   Loop collection
     * x
       do something
-      
-    
+
+$ assigning a function to another and calling it      
+action adding    
+result Action 11 12
+Eq 23 result
+
+$ passing a function as a parameter to another function
+doThisThing * fn b c
+  Fn b c
+dalmations DoThisThing adding 100 1
+Eq dalmations 101
+
+
+$ TODO: tail call optimization
 
 saying * message
   Say message
 
-Saying $ you should be saying a string
+Saying $ almost done
 
-
-
-message $ all done
-Say message
+Say $ all done
 
 </script>
 
@@ -606,6 +616,9 @@ A Hello world
     } 
     
     originalLine = originalLines[lineNumber]
+    if (originalLine == "  Fn b c") {
+      var bp = 1;
+    }
     if (first == "$") {
 
     } else if (first.match(/^[a-z]/)) {
