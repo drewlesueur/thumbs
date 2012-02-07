@@ -155,6 +155,16 @@ sheep DoThisThing2 90 9 * c d
   Adding c d 
 Eq sheep 99
 
+sendText * text
+  ret $ a text was sent to $text.to from $text.from
+
+$  todo: non interpolating strings
+
+status SendText #
+  from $drew
+  to $aimee
+
+Eq status $ a text was sent to aimee from drew
 
 $ TODO: tail call optimization
 
@@ -364,7 +374,7 @@ A Hello world
       } 
       var value = rest.join(" ") 
       value += nestedArgs.join("\n")
-      value = value.replace(/\$([\w]+)/g, function (whole, word) {
+      value = value.replace(/\$([^\s]+)/g, function (whole, word) {
         return get(word, currentScope) 
       })
       return value;
@@ -509,7 +519,7 @@ A Hello world
       newScope.body.args = args
 
       if (isFunction(fn)) {
-        //TODO: convert args to js equivalents!!
+        //TODO: convert args to js equivalents!! helpful for settimeout, callbacks etc
         //var compiled = __bind(fn, null, args);
         var compiled = __bind.apply(null, [fn, null].concat(__slice.call(args)))
         // __bind fn, null, args... 
