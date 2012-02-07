@@ -310,16 +310,22 @@ A Hello world
   }
 
   var __slice = Array.prototype.slice;
+  var slice = __slice;
   var __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
-  var nativeFilter = Array.prototype.filter
-  var __filter = function(obj, iterator, context) {
-    var results = [];
-    if (obj == null) return results;
-    if (nativeFilter && obj.filter === nativeFilter) return obj.filter(iterator, context);
-    each(obj, function(value, index, list) {
-      if (iterator.call(context, value, index, list)) results[results.length] = value;
-    });
-    return results;
+  var nativeBind = Function.prototype.bind 
+  __bind = function bind(func, context) {
+    var bound, args;
+    if (func.bind === nativeBind && nativeBind) return nativeBind.apply(func, slice.call(arguments, 1));
+    if (!_.isFunction(func)) throw new TypeError;
+    args = slice.call(arguments, 2);
+    return bound = function() {
+      if (!(this instanceof bound)) return func.apply(context, args.concat(slice.call(arguments)));
+      ctor.prototype = func.prototype;
+      var self = new ctor;
+      var result = func.apply(self, args.concat(slice.call(arguments)));
+      if (Object(result) === result) return result;
+      return self;
+    };
   };
 
   var execLine = function (line, currentScope, opts) {
@@ -452,18 +458,13 @@ A Hello world
       }
     } 
 
-    var callJSFunction = function (fn, rest, nestedArgs, currentScope) {
-      for (var i = 0; i < rest.length; i++) {
-        rest[i] = get(rest[i], currentScope) 
-      } 
-      //todo, convert objs and fns to js objs and fns
-      return fn.apply(null, rest);
-    }
     
     var compileFunction = function (fn, rest, nestedArgs, currentScope, opts) {
+      //TODO: some of this compiling could be done when it
+      //first parses?
       var newScope = {
         body: {},
-        parentScope: fn.scope
+        parentScope: fn.scope //js func wont have scope but oh well
       }
 
       var args = []
@@ -475,7 +476,9 @@ A Hello world
           var argValue = generateValue(varName, theRest, nestedArgs, currentScope)
           foundInnerObject = true;
         }
-        var argVarName = fn.args[i] 
+        if (fn.args) {
+          var argVarName = fn.args[i] 
+        }
         if (!foundInnerObject) {
           var argValue = get(varName, currentScope)
         }
@@ -488,9 +491,18 @@ A Hello world
         }
       } 
       newScope.body.args = args
-      var compiled = {
-        scope: newScope,
-        body: fn.body
+
+      if (isFunction(fn)) {
+        //TODO: convert args to js equivalents!!
+        //var compiled = __bind(fn, null, args);
+        var compiled = __bind.apply(null, [fn, null].concat(__slice.call(args)))
+        // __bind fn, null, args... 
+      } else {
+        var compiled = {
+          scope: newScope,
+          body: fn.body
+        }
+         
       }
       return compiled;
     }
@@ -500,6 +512,9 @@ A Hello world
       //maybe solving it now with compileFunction call
       //calljs func should be similar to this
       //todo: maybe get rid of opts
+      if (isFunction(compiled)) {
+        return compiled()
+      }
       return runParsed(compiled.body, compiled.scope, opts)
     }
     
@@ -514,13 +529,13 @@ A Hello world
     }
     
     var isStartSymbol = function (thing) {
-      return thing && thing.match(/\*|\#|\$|\+/) 
+      return thing && thing.match && thing.match(/\*|\#|\$|\+/) 
     } 
     //TODO? pass currentScope in here?
     var callFunction = function (first, second, rest, nestedArgs, currentScope) {
       var fn = get(first.toLowerCase()) 
       
-      //isStartSymbol?
+      //TODO: should this block go in `compileFunction` 
       if (second && second.match(/^[A-Z]/)) {
         var ret = callFunction(second, rest[0], rest.slice(1), nestedArgs, currentScope)
         var rest = [ret];
@@ -528,12 +543,8 @@ A Hello world
         var rest = [second].concat(__slice.call(rest))
       }
       
-      if (isFunction(fn)) {
-        return callJSFunction(fn, rest, nestedArgs, currentScope)
-      } else if (fn.type == "fn") {
-        var compiledFunction = compileFunction(fn, rest, nestedArgs, currentScope) 
-        return callThumbsFunction(compiledFunction)  
-      }
+      var compiledFunction = compileFunction(fn, rest, nestedArgs, currentScope) 
+      return callThumbsFunction(compiledFunction)  
     }
     
 
