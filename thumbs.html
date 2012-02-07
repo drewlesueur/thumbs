@@ -88,6 +88,64 @@ Eq snowman.numberOfCoals 6
 myProp $nose
 Eq snowman:myProp $carrots
 
+band #
+  name $Aterciopelados
+  members #
+    first $ Andrea Echeverri
+    second $ Hector Buitrago
+  cds #
+    caribe #
+      name $ caribe atomico
+      art $ shark
+
+andrea $ Andrea Echeverri
+Eq band.members.first andrea
+
+prop $cds
+Eq band:prop.caribe.art $shark
+prop2 $name
+caribe $ caribe atomico
+Eq band:prop.caribe:prop2 caribe
+
+$ todo: do this
+  person #
+  person.name $ Drew LeSueur
+  Eq person.name $ Drew LeSueur
+
+$ todo: do this to
+  MyCoolFunc a b
+    c d e
+
+$ hmmm??
+  MyCoolFunc 
+
+$
+  SomeFuncCall
+    #myfunc 
+      fun $times
+    * success
+      DO the success
+    * error
+      DO the error
+    $
+      the string stuff
+   
+  Loop collection * x
+    print x
+
+  Loop collection
+    * x
+      do something
+      
+    
+
+saying * message
+  Say message
+
+Saying $ you should be saying a string
+
+
+
 message $ all done
 Say message
 
@@ -252,6 +310,17 @@ A Hello world
   }
 
   var __slice = Array.prototype.slice;
+  var __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+  var nativeFilter = Array.prototype.filter
+  var __filter = function(obj, iterator, context) {
+    var results = [];
+    if (obj == null) return results;
+    if (nativeFilter && obj.filter === nativeFilter) return obj.filter(iterator, context);
+    each(obj, function(value, index, list) {
+      if (iterator.call(context, value, index, list)) results[results.length] = value;
+    });
+    return results;
+  };
 
   var execLine = function (line, currentScope, opts) {
     var nestedArgs = []
@@ -267,55 +336,61 @@ A Hello world
     var rest = line.slice(3);
     var value; 
 
-    var setString = function () {
+    var setString = function (rest, nestedArgs, currentScope) {
       for (var i = 0; i < nestedArgs.length; i++) {
         nestedArgs[i] = nestedArgs[i].slice(1).join(" ") //slice to remove line number
       } 
       var value = rest.join(" ") 
       value += nestedArgs.join("\n")
       value = value.replace(/\$([\w]+)/g, function (whole, word) {
-        return get(word) 
+        return get(word, currentScope) 
       })
       return value;
     }
-    var setNumber = function () {
+    var setNumber = function (second) {
       var value = second - 0 
       return value
     }
 
 
-    var setFunction = function (nestedArgs) {
-      var newScope = {
-        body: {},
-        parentScope: currentScope
-      }
+    var setFunction = function (rest, nestedArgs, currentScope) {
       var value = {
-        scope: newScope,
+        scope: currentScope,
         type: "fn",
         args: rest,
         body: nestedArgs
       }
       return value
     }
+
+
+   //   } else if (isStartSymbol(second)) {
+   //     var theArg = generateValue(second, rest, nestedArgs)
+
+
     //TODO: add a unique id
-    var setMap = function (nestedArgs) {
+    var setMap = function (nestedArgs, currentScope) {
       //TODO: hmmmm!!! 
-      var fn = setFunction(nestedArgs);
+      var fn = setFunction([], nestedArgs, currentScope);
       var opts = {
         onlySetInCurrentScope: true      
       }
-      callThumbsFunction(fn, [], {}, opts)
-      delete fn.scope.parentScope;
+      //TODO: call compiledFunction here
+      var retScope = {body: {}, parentScope: currentScope}
+      var compiled = {
+        scope: retScope,
+        body: fn.body
+      }
+      callThumbsFunction(compiled, opts)
+      delete retScope.parentScope;
       var value = {
         type: "map",
-        body: fn.scope.body,
+        body: retScope.body,
         parentScope: "", //TODO: should object
         getters: "", //?
         setters: "", //?
         notFound: "", //?
       }
-      console.log("MAP IS ")
-      console.log(value)
       return value
     }
 
@@ -331,24 +406,29 @@ A Hello world
       }
     }
 
+    
+    var generateValue = function (second, rest, nestedArgs, currentScope) {
+      if (second == "$") { //todo. do a faster way of converting to string //cache or something
+        value = setString(rest, nestedArgs, currentScope)
+      } else if (second == "*") {
+        value = setFunction(rest, nestedArgs, currentScope)
+      } else if ((second - 0) == second) {
+        value = setNumber(second) 
+      } else if (second && second.match(/^[A-Z]/)) {
+        value = setFuncCall(second, rest, nestedArgs, currentScope); 
+      } else if (!second && nestedArgs.length) {
+        value = setFunction(rest, nestedArgs, currentScope) 
+      } else if (second == "#") {
+        value = setMap(nestedArgs, currentScope);
+      } else {
+        value = get(second, currentScope) 
+      }
+      return value;
+    }
+
     var setValue = function () {
       //TODO: pass in first and rest and nested args and stuff
-      if (second == "$") { //todo. do a faster way of converting to string //cache or something
-        value = setString()
-      } else if (second == "*") {
-        value = setFunction(nestedArgs)
-      } else if ((second - 0) == second) {
-        value = setNumber() 
-      } else if (second && second.match(/^[A-Z]/)) {
-        value = setFuncCall(first, second, rest); 
-      } else if (!second && nestedArgs.length) {
-        value = setFunction(nestedArgs) 
-      } else if (second == "#") {
-        value = setMap(nestedArgs);
-      } else {
-        value = get(second) 
-      }
-
+      var value = generateValue(second, rest, nestedArgs, currentScope);
       return set(first, value, currentScope)
     }
 
@@ -372,58 +452,91 @@ A Hello world
       }
     } 
 
-    var callJSFunction = function (fn, first, rest) {
+    var callJSFunction = function (fn, rest, nestedArgs, currentScope) {
       for (var i = 0; i < rest.length; i++) {
-        rest[i] = get(rest[i]) 
+        rest[i] = get(rest[i], currentScope) 
       } 
       //todo, convert objs and fns to js objs and fns
       return fn.apply(null, rest);
     }
     
-    var callThumbsFunction = function (fn, rest, currentScope, opts) {
+    var compileFunction = function (fn, rest, nestedArgs, currentScope, opts) {
+      var newScope = {
+        body: {},
+        parentScope: fn.scope
+      }
+
       var args = []
       for (var i = 0; i < rest.length; i++) {
+        var foundInnerObject = false;
         var varName = rest[i]
+        if (isStartSymbol(varName)) { //should I be doing this?
+          var theRest = rest.slice(i+1)
+          var argValue = generateValue(varName, theRest, nestedArgs, currentScope)
+          foundInnerObject = true;
+        }
         var argVarName = fn.args[i] 
-        var argValue = get(varName, currentScope)
+        if (!foundInnerObject) {
+          var argValue = get(varName, currentScope)
+        }
         args.push(argValue);
         if (argVarName) {
-          fn.scope.body[argVarName] = argValue;
+          newScope.body[argVarName] = argValue;
         }
-        fn.scope.args = args
+        if (foundInnerObject) {
+          break;
+        }
       } 
-      return runParsed(fn.body, fn.scope, opts)
+      newScope.body.args = args
+      var compiled = {
+        scope: newScope,
+        body: fn.body
+      }
+      return compiled;
+    }
+
+    var callThumbsFunction = function (compiled, opts) {
+      //TODO: some of this stuff should be cached per function?
+      //maybe solving it now with compileFunction call
+      //calljs func should be similar to this
+      //todo: maybe get rid of opts
+      return runParsed(compiled.body, compiled.scope, opts)
     }
     
-    var setFuncCall = function (first, second, rest) { //todo: maybe pass arguments here 
+    var setFuncCall = function (second, rest, nestedArgs, currentScope) { //todo: maybe pass arguments here 
       // locally scoped variables
       var name = first  
       var first = second
       var second = rest[0]
       var rest = rest.slice(1)
-      var value = callFunction(first, second, rest)
+      var value = callFunction(first, second, rest, nestedArgs, currentScope)
       return value;
     }
     
-    
+    var isStartSymbol = function (thing) {
+      return thing && thing.match(/\*|\#|\$|\+/) 
+    } 
     //TODO? pass currentScope in here?
-    var callFunction = function (first, second, rest) {
+    var callFunction = function (first, second, rest, nestedArgs, currentScope) {
       var fn = get(first.toLowerCase()) 
-
+      
+      //isStartSymbol?
       if (second && second.match(/^[A-Z]/)) {
-        var ret = callFunction(second, rest[0], rest.slice(1))
+        var ret = callFunction(second, rest[0], rest.slice(1), nestedArgs, currentScope)
         var rest = [ret];
       } else {
         var rest = [second].concat(__slice.call(rest))
       }
-
+      
       if (isFunction(fn)) {
-        return callJSFunction(fn, first, rest)
+        return callJSFunction(fn, rest, nestedArgs, currentScope)
       } else if (fn.type == "fn") {
-        return callThumbsFunction(fn, rest, currentScope)  
+        var compiledFunction = compileFunction(fn, rest, nestedArgs, currentScope) 
+        return callThumbsFunction(compiledFunction)  
       }
     }
     
+
 
     var chainGet = function (names, symbols, lookupScope, originalScope) {
       if (names.length == 0) {
@@ -487,7 +600,7 @@ A Hello world
     } else if (first.match(/^[a-z]/)) {
       return setValue()
     } else if (first.match(/^[A-Z]/)) {
-      return callFunction(first, second, rest)
+      return callFunction(first, second, rest, nestedArgs, currentScope)
     }
   }
   
