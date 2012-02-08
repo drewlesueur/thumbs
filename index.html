@@ -8,6 +8,34 @@
 </script>
 
 <script type="text/x-thumbs">
+$ fx strings
+$ lists
+$ call js funciton
+$ getter setter lookup
+
+myFn * a b
+  B 1 2
+
+three MyFn
+  0
+  * x y
+    Add x y
+Eq three 3
+
+myFn * a b c d
+  C a b d
+
+three MyFn
+  0
+  1
+  * x y z
+    Add x y z
+  4 5 6
+
+Eq three 5
+
+
+$ --------
 
 $ defining a function
 adding * x y
@@ -548,7 +576,7 @@ A Hello world
       if (rest.length) {
         var second = rest[0]
         var rest = rest.slice(1)
-        if (second && second.match(/^[A-Z]/)) {
+        if (second && second.match && second.match(/^[A-Z]/)) {
           var ret = callFunction(second, rest[0], rest.slice(1), nestedArgs, currentScope)
           var rest = [ret];
         } else {
@@ -574,7 +602,9 @@ A Hello world
           newScope.body[argVarName] = argValue;
         }
         if (foundInnerObject) {
+          argsIndex += 1
           break;
+          
         }
         
       } 
@@ -605,8 +635,15 @@ A Hello world
 
         if (!foundInnerObject && nestedArgs.length) {
           for (var i = 0; i < nestedArgs.length; i++) {
-            var nestedArg = nestedArgs[i].slice(1);
-            convertArgsInfo = convertArgs(argsIndex, args, newScope, fn, nestedArg, [], currentScope, opts)
+            var newNestedArg = []
+            var nestedArg = nestedArgs[i]
+              if (nestedArg[0] - 0 !== nestedArg[0]) {
+                var newNestedArg = nestedArg.slice(1) 
+                nestedArg = nestedArg[0].slice(1)
+              } else {
+                nestedArg = nestedArg.slice(1) // see line = line[0] self similar?
+              }
+            convertArgsInfo = convertArgs(argsIndex, args, newScope, fn, nestedArg, newNestedArg, currentScope, opts)
             argsIndex = convertArgsInfo.argsIndex
             //foundInnerObject = convertArgsInfo.foundInnerObject
           }
@@ -760,7 +797,9 @@ A Hello world
       var code = codes[i].innerHTML.slice(1)
       run(code)
     }
+    console.log(parsed)
     console.log(scope)
+
   }
 </script>
 <body onload="start()">
