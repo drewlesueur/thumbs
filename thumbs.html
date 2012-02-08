@@ -173,7 +173,35 @@ saying * message
 
 ret Adding
   1 2
-Eq ret 4
+  3 4
+  5 6
+Eq ret 21
+
+argTest * a b c d e
+  a $ $a $b $c $d $e
+
+t ArgTest $h $e $l $l $o
+Eq t $ h e l l o
+
+$ this should work
+  argTest2 * a b c d e
+    a $ $a $b $c $d $e
+    a
+  t ArgTest2 $h $e $l $l $o
+  Eq t $ h e l l o
+
+  argTest3 * a b c d e
+    $ $a $b $c $d $e
+  t ArgTest3 $h $e $l $l $o
+  Eq t $ h e l l o
+
+  argTest4 * a b c d e
+    $ $a $b $c $d $e
+  t ArgTest4 
+    $h $e $l
+    $l $o
+  Eq t $ h e l l o
+
 
 Saying $ almost done
 
@@ -487,21 +515,21 @@ A Hello world
           
       }
     } 
-
-    
-    var compileFunction = function (fn, rest, nestedArgs, currentScope, opts) {
-      //TODO: some of this compiling could be done when it
-      //first parses?
-      // or cache some of this stuff here
-
-      var newScope = {
-        body: {},
-        parentScope: fn.scope //js func wont have scope but oh well
+     
+    var convertArgs = function (argsIndex, args, newScope, fn, rest, nestedArgs, currentScope, opts ) {
+      var foundInnerObject = false;
+      //TODO: optimize this because the fn calling this one has already com
+      //combined second and rest 
+      var second = rest[0]
+      var rest = rest.slice(1)
+      if (second && second.match(/^[A-Z]/)) {
+        var ret = callFunction(second, rest[0], rest.slice(1), nestedArgs, currentScope)
+        var rest = [ret];
+      } else {
+        var rest = [second].concat(__slice.call(rest))
       }
 
-      var args = []
       for (var i = 0; i < rest.length; i++) {
-        var foundInnerObject = false;
         var varName = rest[i]
         if (isStartSymbol(varName)) { //should I be doing this?
           var theRest = rest.slice(i+1)
@@ -509,7 +537,7 @@ A Hello world
           foundInnerObject = true;
         }
         if (fn.args) {
-          var argVarName = fn.args[i] 
+          var argVarName = fn.args[i + argsIndex] 
         }
         if (!foundInnerObject) {
           var argValue = get(varName, currentScope)
@@ -521,9 +549,45 @@ A Hello world
         if (foundInnerObject) {
           break;
         }
+        
       } 
-      newScope.body.args = args
+      newScope.body.args = args;
+      return  {
+        foundInnerObject: foundInnerObject,
+        argsIndex: argsIndex + i - 1
+      }
+    }
+    
+    var compileFunction = function (fn, rest, nestedArgs, currentScope, opts) {
+      //TODO: some of this compiling could be done when it
+      //first parses?
+      // or cache some of this stuff here
 
+      var newScope = {
+        body: {},
+        parentScope: fn.scope //js func wont have scope but oh well
+      }
+
+      var args = [];
+      var argsIndex = 0;
+      convertArgsInfo = convertArgs(argsIndex, args, newScope, fn, rest, nestedArgs, currentScope, opts)
+
+      function isThisTheBestWayToHandleNestedArgs() {
+        var argsIndex = convertArgsInfo.argsIndex
+        foundInnerObject = convertArgsInfo.foundInnerObject
+
+        if (!foundInnerObject && nestedArgs.length) {
+          for (var i = 0; i < nestedArgs.length; i++) {
+            var nestedArg = nestedArgs[i].slice(1);
+            convertArgsInfo = convertArgs(argsIndex, args, newScope, fn, nestedArg, nestedArgs, currentScope, opts)
+            argsIndex = convertArgsInfo.argsIndex
+            //foundInnerObject = convertArgsInfo.foundInnerObject
+          }
+        }
+      }
+      isThisTheBestWayToHandleNestedArgs()
+
+      var args = newScope.body.args
       if (isFunction(fn)) {
         //TODO: convert args to js equivalents!! helpful for settimeout, callbacks etc
         //var compiled = __bind(fn, null, args);
@@ -534,7 +598,6 @@ A Hello world
           scope: newScope,
           body: fn.body
         }
-         
       }
       return compiled;
     }
@@ -567,14 +630,7 @@ A Hello world
     var callFunction = function (first, second, rest, nestedArgs, currentScope) {
       var fn = get(first.toLowerCase()) 
       
-      //TODO: should this block go in `compileFunction` 
-      if (second && second.match(/^[A-Z]/)) {
-        var ret = callFunction(second, rest[0], rest.slice(1), nestedArgs, currentScope)
-        var rest = [ret];
-      } else {
-        var rest = [second].concat(__slice.call(rest))
-      }
-      
+      var rest = [second].concat(__slice.call(rest))
       var compiledFunction = compileFunction(fn, rest, nestedArgs, currentScope) 
       return callThumbsFunction(compiledFunction)  
     }
