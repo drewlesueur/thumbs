@@ -1,4 +1,5 @@
 <!doctype html>
+<meta name="viewport" content="initial-scale = 1.0" />
 <style>
   * {
     font-family: Menlo, 'Bitstream Vera Sans Mono', 'DejaVu Mono', 'Monospace'
@@ -11,7 +12,18 @@
 $ fx strings
 $ lists
 $ call js funciton
-$ getter setter lookup
+$ getter setter lookup / no just make functions able to be called with .
+$ add reference to caller scope
+$ set parent on object to lookup
+$ property missing object?prop
+$ conect everything by function calls
+
+
+argTest * a b c d e
+  a $ $a $b $c $d $e
+
+t ArgTest $h $e $l $l $o
+Eq t $ h e l l o
 
 myFn * a b
   B 1 2
@@ -224,12 +236,6 @@ ret Add
 Eq ret 15
 
 
-argTest * a b c d e
-  a $ $a $b $c $d $e
-
-t ArgTest $h $e $l $l $o
-Eq t $ h e l l o
-
 $ this should work
   argTest2 * a b c d e
     a $ $a $b $c $d $e
@@ -426,7 +432,7 @@ A Hello world
   __bind = function bind(func, context) {
     var bound, args;
     if (func.bind === nativeBind && nativeBind) return nativeBind.apply(func, slice.call(arguments, 1));
-    if (!_.isFunction(func)) throw new TypeError;
+    if (!isFunction(func)) throw new TypeError;
     args = slice.call(arguments, 2);
     return bound = function() {
       if (!(this instanceof bound)) return func.apply(context, args.concat(slice.call(arguments)));
@@ -803,6 +809,10 @@ A Hello world
   }
 </script>
 <body onload="start()">
+  <textarea>
+  
+  </textarea>
+
   //todo. objects as keys
   //todo. splats! and create a new function with scope
   //dynamically set a variable to the current scope
