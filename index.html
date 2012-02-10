@@ -1,14 +1,33 @@
 <!doctype html>
+<head>
 <meta name="viewport" content="initial-scale = 1.0" />
 <style>
   * {
     font-family: Menlo, 'Bitstream Vera Sans Mono', 'DejaVu Mono', 'Monospace'
   }
 </style>
-<script type="text/x-thumbs2">
+<script type="text/x-thumbs">
+log * message
+  Say $ log: $message
+
+greet * person
+  Say $ welcome $person. How are you?
+
+Greet $friend
+
+band #
+  name $Aterciopelados
+  members #
+    first $Andrea
+    second $Hector
+
+Log band.members.second
+
+
+
 </script>
 
-<script type="text/x-thumbs">
+<script type="text/x-thumbs2">
 $ fx strings
 $ lists
 $ call js funciton
@@ -17,6 +36,8 @@ $ add reference to caller scope
 $ set parent on object to lookup
 $ property missing object?prop
 $ conect everything by function calls
+$ todo make it async! calling a function should be async. getting should be async
+$ at least async-able. you can use callbacks, but call it right away when not debugging? or figure something out
 
 
 argTest * a b c d e
@@ -312,18 +333,6 @@ SayHi myname myage
 answer Add 7 5
 
 </script>
-<h1>Thumbs. A simple programming language</h1>
-What the symbols mean
-<pre class="legend" style="font-size: 40px">
-* function
-# map (hash)
-+ list (array)
-$ text (string)
-</pre>
-
-A Hello world
-
-
 <script type="text/javascript">
 
   var splitText = function (text) {
@@ -385,7 +394,7 @@ A Hello world
 
   var rawScope = {
     "say": function (x) {
-      alert(x)
+       alert(x)
     },
     "do": function () {},
     "add": function () {
@@ -396,7 +405,7 @@ A Hello world
     },
     eq: function (a, b) {
       if (a != b) {
-        alert(a + " isn't " + b + " on line " + lineNumber) 
+        console.log(a + " isn't " + b + " on line " + lineNumber) 
       }  
     },
     neg: function (a) {
@@ -453,6 +462,7 @@ A Hello world
       line = line[0];
     }
     lineNumber = line[0]
+    execingLine(lineNumber)
     var first = line[1];
     var second = line[2];
     var rest = line.slice(3);
@@ -779,22 +789,86 @@ A Hello world
   
   var originalLines;
   var parsed;
+  
+  var queue = []
+  var queueIndex = 0;
+  var startTimer = function () {
+    
+    var f
+    setInterval(function () {
+      console.log(queueIndex)
+      f = queue[queueIndex]
+      f && f();
+      queueIndex += 1
+    }, 1000)   
+  }
+  var loop = function (items, cb) {
+    var section = []
+    for (var i=0; i < items.length; i++) {
+       var item = items[i]
+       //cb(item, i) 
+       var f = __bind(cb, null, item, i)
+       section.push(f)
+    }
+    section.unshift(0)
+    section.unshift(queueIndex + 1)
+    queue.splice.apply(queue, section)
+    console.log("q:" + queue.length)
+  }
 
   var runParsed = function (parsed, theScope, opts) {
      theScope = theScope || currentScope
      var last;
-     for (var i = 0; i < parsed.length; i++) {
-       var line = parsed[i];
+     loop(parsed, function (line, i, cb) {
        last = execLine(line, theScope, opts);
-     }
+     })
      return last
+  }
+  
+  var lastLine = null;
+  var execingLine = function (lineNumber) {
+    lastLine && lastLine.classList.remove("selected")
+    var line = document.querySelector('[data-line="'+lineNumber+'"]') 
+    line.classList.add("selected")
+    lastLine = line
+    scrollTo(0, line.offsetTop - 100)
   }
 
   var run = function (code) {
-     parsed = parse(code);
-     originalLines = code.split("\n")
-     parsed = parsed.slice(1)
-     runParsed(parsed);
+    parsed = parse(code);
+    originalLines = code.split("\n")
+    parsed = parsed.slice(1)
+    addUI(originalLines)
+    runParsed(parsed);
+    startTimer()
+  }
+
+  var addUI = function () {
+    var codeEl = document.querySelector('#code')
+    for (var i = 0; i < originalLines.length; i++) {
+      var lineEl = document.createElement('pre')   
+      lineEl.setAttribute("class", "line")
+      lineEl.setAttribute('data-line', i)
+      codeEl.appendChild(lineEl)
+      var line = originalLines[i]
+      line = line.replace(/^([\s]*)([a-z][\w]+)/, function (all, s, w) {
+        return s + "<span class='set'>" + w + '</span>'
+      })
+      line = line.replace(/^([\s]*)([A-Z][\w]*)/, function (all, s, w) {
+        return s + "<span class='call'>" + w + '</span>'
+      })
+      line = line.replace(/^([\s]*)([A-Z][\w]*)/, function (all, s, w) {
+        return s + "<span class='call'>" + w + '</span>'
+      })
+      line = line.replace(/^([\s]*)([\$].*)/, function (all, s, w) {
+        return s + "<span class='text'>" + w + '</span>'
+      })
+      line = line.replace(/[\$][^\s]+/, function (all, s, w) {
+        return "<span class='text'>" + all + '</span>'
+      })
+      lineEl.innerHTML = line
+       
+    }
   }
 
   var start = function () {
@@ -803,15 +877,23 @@ A Hello world
       var code = codes[i].innerHTML.slice(1)
       run(code)
     }
-    console.log(parsed)
-    console.log(scope)
+    //console.log(parsed)
+    //console.log(scope)
 
   }
 </script>
-<body onload="start()">
-  <textarea>
-  
-  </textarea>
+<script type="text/x-todo">
+  <h1>Thumbs. A simple programming language</h1>
+  What the symbols mean
+  <pre class="legend" style="font-size: 40px">
+  * function
+# map (hash)
+  + list (array)
+  $ text (string)
+  </pre>
+
+  A Hello world
+
 
   //todo. objects as keys
   //todo. splats! and create a new function with scope
@@ -820,4 +902,47 @@ A Hello world
   // allow for easy "Say $ hello wolrd"
   //one more level of indirection for strings and numbers?
   //tail call optimization
+</script>
+<link rel="stylesheet" href="dejavu/stylesheet.css" type="text/css" charset="utf-8">
+<style>
+  * {
+		font-family: 'DejaVuSansMonoBook';
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  textarea {
+  font-size: 16px;
+  margin-right: 10%; width:90%; height:2000px;
+  }
+  .set {
+    color: blue;  
+  }
+  .call {
+    color: #00AA00;  
+  }
+  .text {
+    color: #AA0000;
+		font-family2: 'HoeflerText-Regular';
+  }
+
+  .selected { background-color: rgb(0,255,255); }
+
+#code {
+  font-size: 16px;
+  margin-right: 10%; width:90%; height:2000px;
+}
+.line {
+  
+}
+</style>
+</head>
+<body onload="start()">
+  <div id="code" style="">
+  
+  </div>
+
 </body>
+</html>
+
+
