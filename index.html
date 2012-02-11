@@ -6,7 +6,7 @@
     font-family: Menlo, 'Bitstream Vera Sans Mono', 'DejaVu Mono', 'Monospace'
   }
 </style>
-<script type="text/x-thumbs">
+<script type="text/x-thumbs2">
 log * message
   Say $ log: $message
 
@@ -27,7 +27,7 @@ Log band.members.second
 
 </script>
 
-<script type="text/x-thumbs2">
+<script type="text/x-thumbs">
 $ fx strings
 $ lists
 $ call js funciton
@@ -38,6 +38,7 @@ $ property missing object?prop
 $ conect everything by function calls
 $ todo make it async! calling a function should be async. getting should be async
 $ at least async-able. you can use callbacks, but call it right away when not debugging? or figure something out
+$ no, just have an array of things to execute.
 
 
 argTest * a b c d e
@@ -257,24 +258,25 @@ ret Add
 Eq ret 15
 
 
-$ this should work
-  argTest2 * a b c d e
-    a $ $a $b $c $d $e
-    a
-  t ArgTest2 $h $e $l $l $o
-  Eq t $ h e l l o
+argTest2 * a b c d e
+  a $ $a $b $c $d $e
+  a
 
-  argTest3 * a b c d e
-    $ $a $b $c $d $e
-  t ArgTest3 $h $e $l $l $o
-  Eq t $ h e l l o
+t ArgTest2 $h $e $l $l $o
+Eq t $ h e l l o
 
-  argTest4 * a b c d e
-    $ $a $b $c $d $e
-  t ArgTest4 
-    $h $e $l
-    $l $o
-  Eq t $ h e l l o
+$ todo: these
+argTest3 * a b c d e
+  $ $a $b $c $d $e
+t ArgTest3 $h $e $l $l $o
+Eq t $ h e l l o
+
+argTest4 * a b c d e
+  $ $a $b $c $d $e
+t ArgTest4 
+  $h $e $l
+  $l $o
+Eq t $ h e l l o
 
 
 Saying $ almost done
@@ -394,7 +396,7 @@ answer Add 7 5
 
   var rawScope = {
     "say": function (x) {
-       alert(x)
+       console.log(x)
     },
     "do": function () {},
     "add": function () {
@@ -558,7 +560,10 @@ answer Add 7 5
       return value;
     }
 
-    var setValue = function () {
+    var setValue = function (first, second, rest, nestedArgs, currentScope) {
+      if (!second && !nestedArgs.length) {
+        return get(first, currentScope)
+      }
       //TODO: pass in first and rest and nested args and stuff
       var value = generateValue(second, rest, nestedArgs, currentScope);
       return set(first, value, currentScope)
@@ -704,7 +709,7 @@ answer Add 7 5
     }
     
     var isStartSymbol = function (thing) {
-      return thing && thing.match && thing.match(/\*|\#|\$|\+/) 
+      return thing && thing.match && thing.match(/^[\*|\#|\$|\+]$/) 
     } 
     //TODO? pass currentScope in here?
     var callFunction = function (first, second, rest, nestedArgs, currentScope) {
@@ -780,8 +785,13 @@ answer Add 7 5
     }
     if (first == "$") {
 
+      var theRest = [second].concat(__slice.call(rest))
+      var value = generateValue(first, theRest, nestedArgs, currentScope);
+      return value;
     } else if (first.match(/^[a-z]/)) {
-      return setValue()
+      return setValue(first, second, rest, nestedArgs, currentScope)
+    //} else if (first.match(/^[a-z]/) && !second) {
+    //  return get(first, currentScope)
     } else if (first.match(/^[A-Z]/)) {
       return callFunction(first, second, rest, nestedArgs, currentScope)
     }
@@ -796,7 +806,6 @@ answer Add 7 5
     
     var f
     setInterval(function () {
-      console.log(queueIndex)
       f = queue[queueIndex]
       f && f();
       queueIndex += 1
@@ -806,14 +815,13 @@ answer Add 7 5
     var section = []
     for (var i=0; i < items.length; i++) {
        var item = items[i]
-       //cb(item, i) 
-       var f = __bind(cb, null, item, i)
-       section.push(f)
+       cb(item, i) 
+       //var f = __bind(cb, null, item, i)
+       //section.push(f)
     }
     section.unshift(0)
     section.unshift(queueIndex + 1)
     queue.splice.apply(queue, section)
-    console.log("q:" + queue.length)
   }
 
   var runParsed = function (parsed, theScope, opts) {
