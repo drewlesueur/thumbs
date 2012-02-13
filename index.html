@@ -6,37 +6,20 @@
     font-family: Menlo, 'Bitstream Vera Sans Mono', 'DejaVu Mono', 'Monospace'
   }
 </style>
-<script type="text/x-thumbs">
-  Is 1 2 *
-    Say $ yes! 
-
-  Is 2 10 *
-    Say $ 2 is 10:
-
+<script type="text/x-thumbs2">
+fac * n
+  Is n 0 *
+    0
+  Else *
+    nLess1 Sub n 1
+    facNLess1 Fac nLess1
+    Mult n facNLess1
+    
+   
     
 </script>
-<script type="text/x-thumbs2">
-log * message
-  Say $ log: $message
 
-greet * person
-  Say $ welcome $person , How are you?
-
-Greet $friend
-
-band #
-  name $Aterciopelados
-  members #
-    first $Andrea
-    second $Hector
-
-Log band.members.second
-
-
-
-</script>
-
-<script type="text/x-thumbs2">
+<script type="text/x-thumbs">
 $ fx strings
 $ lists
 $ call js funciton
@@ -48,6 +31,53 @@ $ conect everything by function calls
 $ todo make it async! calling a function should be async. getting should be async
 $ at least async-able. you can use callbacks, but call it right away when not debugging? or figure something out
 $ no, just have an array of things to execute.
+
+$ change it so when you call a js function you also pass in scope
+
+$ maybe a % operator that allows you to do
+  math equations
+  like:
+  answer % -b + (sqrt(b^2 - 4*a*c)) / 2a
+  with parens, order of operations, everyting
+
+
+determineAnimal * travel
+  animal $ none
+  Is travel $legs *
+    animal $ bear
+  ElseIs travel $bicycle *
+    animal $ human
+  ElseIs travel $flight *
+    animal $bird
+  Else *
+    animal $unknown
+  animal
+
+flyingAnimal DetermineAnimal $flight
+Eq flyingAnimal $bird
+
+all4sAnimal DetermineAnimal $legs
+cyclingAnimal DetermineAnimal $bicycle
+unknownAnimal DetermineAnimal $ ???
+
+Eq all4sAnimal $bear
+Eq cyclingAnimal $human
+Eq unknownAnimal $unknown2
+
+
+
+sport $ none
+ball $white
+Is ball $white *
+  sport $ volleyball
+Is ball $orange *
+  sport $ basketball
+
+Eq sport $ volleyball
+
+  
+  
+  
 
 
 argTest * a b c d e
@@ -351,6 +381,8 @@ answer Add 7 5
     return text
   }
 
+  var lastIf = false;
+
   var parse = function(configs) {
     var a, b, config, currentObj, currentSpaceLen, final, i, lastIndex, lastThingAdded, match, newCurrentObj, objectStack, ret, spaceLen, text, _i, _len, _ref;
     configs = configs.split("\n");
@@ -407,10 +439,38 @@ answer Add 7 5
     "is": function (a, b, c) {
       if (a == b) {
         c()         
-      } 
+        lastIf = true 
+      } else {
+
+        lastIf = false 
+      }
+    },
+    "elseis": function (a, b, c) {
+      if (lastIf == false) {
+        if (a == b) {
+          c()         
+          lastIf = true 
+        } else {
+          lastIf = false 
+        }
+      }   
+    },
+    "else": function (c) {
+      if (lastIf == false) {
+        c()         
+      }   
     },
     "say": function (x) {
        console.log(x)
+    },
+    "sub": function (a, b) {
+      return a - b 
+    },
+    "mult": function (a, b) {
+      return a * b 
+    },
+    div: function (a, b) {
+      return a / b 
     },
     "do": function () {},
     "add": function () {
@@ -646,7 +706,7 @@ answer Add 7 5
   var convertThumbsArgsToJSArgs = function(args, currentScope) {
     for (var i = 0; i < args.length; i++) {
       var arg = args[i]
-      if (arg.type == "fn") {
+      if (arg && arg.type == "fn") {
         var rest = []; // for now
         var nestedArgs = []; //
         var compiledFunction = compileFunction(arg, rest, nestedArgs, currentScope) 
@@ -710,7 +770,7 @@ answer Add 7 5
   }
 
   var callThumbsFunction = function (compiled, opts) {
-    console.log("Calling a function")
+    //console.log("Calling a function")
     //TODO: some of this stuff should be cached per function?
     //maybe solving it now with compileFunction call
     //calljs func should be similar to this
@@ -721,7 +781,7 @@ answer Add 7 5
     } else {
       ret = runParsed(compiled.body, compiled.scope, opts)
     }
-    console.log("done calling a function")
+    //console.log("done calling a function")
     return ret;
   }
   
@@ -805,8 +865,10 @@ answer Add 7 5
       return null;
     }
   } 
-
+  
+  var theCurrentScope;
   var execLine = function (line, currentScope, opts) {
+    theCurrentScope = currentScope;
     var nestedArgs = []
     if (line[0] - 0 === line[0]) {
       //no nested args
@@ -820,7 +882,6 @@ answer Add 7 5
     var second = line[2];
     var rest = line.slice(3);
     var value; 
-
     
     originalLine = originalLines[lineNumber]
     if (originalLine == "  Fn b c") {
