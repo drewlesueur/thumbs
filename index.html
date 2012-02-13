@@ -6,6 +6,15 @@
     font-family: Menlo, 'Bitstream Vera Sans Mono', 'DejaVu Mono', 'Monospace'
   }
 </style>
+<script type="text/x-thumbs">
+  Is 1 2 *
+    Say $ yes! 
+
+  Is 2 10 *
+    Say $ 2 is 10:
+
+    
+</script>
 <script type="text/x-thumbs2">
 log * message
   Say $ log: $message
@@ -27,7 +36,7 @@ Log band.members.second
 
 </script>
 
-<script type="text/x-thumbs">
+<script type="text/x-thumbs2">
 $ fx strings
 $ lists
 $ call js funciton
@@ -395,6 +404,11 @@ answer Add 7 5
   };
 
   var rawScope = {
+    "is": function (a, b, c) {
+      if (a == b) {
+        c()         
+      } 
+    },
     "say": function (x) {
        console.log(x)
     },
@@ -621,7 +635,28 @@ answer Add 7 5
       argsIndex: argsIndex + i
     }
   }
-  
+
+  var convertJSArgsToThumbsArgs = function (args) {
+    
+  }
+
+  //TODO: add objects, whats the best way? 
+  // should I treat them like functions?
+  // or should I just try to convert to js object
+  var convertThumbsArgsToJSArgs = function(args, currentScope) {
+    for (var i = 0; i < args.length; i++) {
+      var arg = args[i]
+      if (arg.type == "fn") {
+        var rest = []; // for now
+        var nestedArgs = []; //
+        var compiledFunction = compileFunction(arg, rest, nestedArgs, currentScope) 
+        args[i] = function () {
+          callThumbsFunction(compiledFunction)  
+        }
+      }   
+    }  
+  } 
+
   var compileFunction = function (fn, rest, nestedArgs, currentScope, opts) {
     //TODO: some of this compiling could be done when it
     //first parses?
@@ -660,6 +695,7 @@ answer Add 7 5
 
     var args = newScope.body.args
     if (isFunction(fn)) {
+      convertThumbsArgsToJSArgs(args, currentScope);
       //TODO: convert args to js equivalents!! helpful for settimeout, callbacks etc
       //var compiled = __bind(fn, null, args);
       var compiled = __bind.apply(null, [fn, null].concat(__slice.call(args)))
@@ -674,14 +710,19 @@ answer Add 7 5
   }
 
   var callThumbsFunction = function (compiled, opts) {
+    console.log("Calling a function")
     //TODO: some of this stuff should be cached per function?
     //maybe solving it now with compileFunction call
     //calljs func should be similar to this
     //todo: maybe get rid of opts
+    var ret
     if (isFunction(compiled)) {
-      return compiled()
+      ret = compiled()
+    } else {
+      ret = runParsed(compiled.body, compiled.scope, opts)
     }
-    return runParsed(compiled.body, compiled.scope, opts)
+    console.log("done calling a function")
+    return ret;
   }
   
   var setFuncCall = function (second, rest, nestedArgs, currentScope) { //todo: maybe pass arguments here 
