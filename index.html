@@ -9,7 +9,8 @@
 <script type="text/x-thumbs2">
 </script>
 
-<script type="text/x-thumbs">
+<script type="text/plain">
+TODO:
 $ fx strings
 $ lists
 $ call js funciton
@@ -18,17 +19,38 @@ $ add reference to caller scope
 $ set parent on object to lookup
 $ property missing object?prop
 $ conect everything by function calls
-$ todo make it async! calling a function should be async. getting should be async
-$ at least async-able. you can use callbacks, but call it right away when not debugging? or figure something out
-$ no, just have an array of things to execute.
-
 $ change it so when you call a js function you also pass in scope
-
 $ maybe a % operator that allows you to do
   math equations
   like:
   answer % -b + (sqrt(b^2 - 4*a*c)) / 2a
   with parens, order of operations, everyting
+
+*****
+Reimplement the whole thing using simple gotos and create your own stack etc,
+That will allow you to do tail call optimization
+Reimplement in subset of thumbs that will be easy to convert to other languages
+****
+
+
+</script>
+
+<script type="text/x-thumbs">
+
+singer #
+singer.name $ javiera mena
+singer.country $ chile
+
+Eq singer.name $ javiera mena
+prop $country
+Eq singer:prop $chile
+
+singer.sing * song
+  $ singing $song
+
+singing Singer.sing $ moon rock light
+Eq singing $ singing moon rock light
+
 
 makeguess * numb
   Is numb 7 *
@@ -46,8 +68,7 @@ fac * n
   Else *
     nLess1 Sub n 1
     facNLess1 Fac nLess1
-    ret Mult n facNLess1
-    ret
+    Mult n facNLess1
 
 ans Fac 3
 Eq ans 6
@@ -648,9 +669,23 @@ answer Add 7 5
   }
 
   var set = function (name, value, currentScope, opts) {
+
+    var names = name.split(/\.|\:/)
+
     name = name.toLowerCase()
     if (opts && opts.onlySetInCurrentScope) {
       var settingScope = currentScope;
+    } else if (names.length > 1) {
+      var symbols = name.match(/\.|\:/g)
+      symbols.unshift(".")
+      lastSymbol = symbols.pop()
+      lastName = names.pop()
+      settingScope = chainGet(names, symbols, currentScope, currentScope)
+      if (lastSymbol == ":") {
+        name = get(lastName, currentScope)  
+      } else {
+        name = lastName
+      }
     } else {
       var settingScope = findScopeWithName(name, currentScope)
     }
