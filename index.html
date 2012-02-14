@@ -7,16 +7,6 @@
   }
 </style>
 <script type="text/x-thumbs2">
-fac * n
-  Is n 0 *
-    0
-  Else *
-    nLess1 Sub n 1
-    facNLess1 Fac nLess1
-    Mult n facNLess1
-    
-   
-    
 </script>
 
 <script type="text/x-thumbs">
@@ -40,6 +30,27 @@ $ maybe a % operator that allows you to do
   answer % -b + (sqrt(b^2 - 4*a*c)) / 2a
   with parens, order of operations, everyting
 
+makeguess * numb
+  Is numb 7 *
+    $ you win
+  Else *
+    $ you loose
+status Makeguess 7
+status2 MakeGuess 8
+Eq status $ you win
+Eq status2 $ you loose
+
+fac * n
+  Is n 0 *
+    1
+  Else *
+    nLess1 Sub n 1
+    facNLess1 Fac nLess1
+    ret Mult n facNLess1
+    ret
+
+ans Fac 3
+Eq ans 6
 
 determineAnimal * travel
   animal $ none
@@ -62,7 +73,7 @@ unknownAnimal DetermineAnimal $ ???
 
 Eq all4sAnimal $bear
 Eq cyclingAnimal $human
-Eq unknownAnimal $unknown2
+Eq unknownAnimal $unknown
 
 
 
@@ -382,6 +393,7 @@ answer Add 7 5
   }
 
   var lastIf = false;
+  lastIfAns = null;
 
   var parse = function(configs) {
     var a, b, config, currentObj, currentSpaceLen, final, i, lastIndex, lastThingAdded, match, newCurrentObj, objectStack, ret, spaceLen, text, _i, _len, _ref;
@@ -438,27 +450,33 @@ answer Add 7 5
   var rawScope = {
     "is": function (a, b, c) {
       if (a == b) {
-        c()         
         lastIf = true 
+        lastIfAns = c()
+        return lastIfAns
       } else {
-
         lastIf = false 
+        return lastIfAns
       }
     },
     "elseis": function (a, b, c) {
       if (lastIf == false) {
         if (a == b) {
-          c()         
           lastIf = true 
+          lastIfAns = c()
+          return lastIfAns
         } else {
           lastIf = false 
+          return lastIfAns
         }
       }   
     },
     "else": function (c) {
       if (lastIf == false) {
-        c()         
-      }   
+        lastIfAns = c()
+        return lastIfAns
+      } else {
+        return lastIfAns
+      }
     },
     "say": function (x) {
        console.log(x)
@@ -711,7 +729,7 @@ answer Add 7 5
         var nestedArgs = []; //
         var compiledFunction = compileFunction(arg, rest, nestedArgs, currentScope) 
         args[i] = function () {
-          callThumbsFunction(compiledFunction)  
+          return callThumbsFunction(compiledFunction)  
         }
       }   
     }  
@@ -798,7 +816,6 @@ answer Add 7 5
   var isStartSymbol = function (thing) {
     return thing && thing.match && thing.match(/^[\*|\#|\$|\+]$/) 
   } 
-  //TODO? pass currentScope in here?
   var callFunction = function (first, second, rest, nestedArgs, currentScope) {
     var fn = get(first.toLowerCase(), currentScope) 
     if (second) { 
@@ -867,6 +884,7 @@ answer Add 7 5
   } 
   
   var theCurrentScope;
+  var stopSignal = "totally stop this here thing!!!";
   var execLine = function (line, currentScope, opts) {
     theCurrentScope = currentScope;
     var nestedArgs = []
@@ -887,12 +905,15 @@ answer Add 7 5
     if (originalLine == "  Fn b c") {
       var bp = 1;
     }
-    if (first == "$") {
-
+    if (first == "stop") {
+      return stopSignal;
+    } if (first == "$") { //todo handle all the rest where it starts with a symbol
       var theRest = [second].concat(__slice.call(rest))
       var value = generateValue(first, theRest, nestedArgs, currentScope);
       return value;
     } else if (first.match(/^[a-z]/)) {
+      return setValue(first, second, rest, nestedArgs, currentScope, opts)
+    } else if (first.match(/^\d/)) {
       return setValue(first, second, rest, nestedArgs, currentScope, opts)
     //} else if (first.match(/^[a-z]/) && !second) {
     //  return get(first, currentScope)
@@ -919,7 +940,10 @@ answer Add 7 5
     var section = []
     for (var i=0; i < items.length; i++) {
        var item = items[i]
-       cb(item, i) 
+       ret = cb(item, i) 
+       if (ret == stopSignal) {
+         break;   
+       }
        //var f = __bind(cb, null, item, i)
        //section.push(f)
     }
@@ -933,6 +957,7 @@ answer Add 7 5
      var last;
      loop(parsed, function (line, i, cb) {
        last = execLine(line, theScope, opts);
+       return last;
      })
      return last
   }
