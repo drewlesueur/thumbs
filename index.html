@@ -30,12 +30,17 @@ $ maybe a % operator that allows you to do
 Reimplement the whole thing using simple gotos and create your own stack etc,
 That will allow you to do tail call optimization
 Reimplement in subset of thumbs that will be easy to convert to other languages
+You may need to convert nested calls out.
+Based on gotos.
 ****
 
 
 </script>
 
 <script type="text/x-thumbs">
+
+In 100 *
+  Say $ 100 miliseconds passed
 
 singer #
 singer.name $ javiera mena
@@ -469,6 +474,9 @@ answer Add 7 5
   };
 
   var rawScope = {
+    "in": function (time, f) {
+      setTimeout(f, time)
+    },
     "is": function (a, b, c) {
       if (a == b) {
         lastIf = true 
