@@ -662,9 +662,16 @@
     return ran;
   }    
   
+  var addScope = function (obj) {
+    for (var i in obj) {
+      rawScope[i] = obj[i] 
+    }  
+  }
+
   Thumbs.runScriptTags = runScriptTags
   Thumbs.run = run //runs raw code
   Thumbs.runFile = runFile
+  Thumbs.addScope = addScope
  
 
 })();

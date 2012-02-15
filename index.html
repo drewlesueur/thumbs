@@ -40,6 +40,7 @@ Based on gotos.
 </script>
 <script type="text/x-thumbs">
 
+NewSay $ hello world
 Eq $volleyball $ volleyball
 
 In 100 *
@@ -472,8 +473,17 @@ answer Add 7 5
   
 }
 </style>
+<script>
+ var start = function () {
+    Thumbs.addScope({newsay: function (word) {
+      console.log("saying: " + word) 
+    }})
+    Thumbs.runScriptTags()
+  }
+
+</script>
 </head>
-<body onload="Thumbs.runScriptTags()">
+<body onload="start()">
 
 </body>
 </html>
