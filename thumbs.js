@@ -664,7 +664,7 @@
   
   var addScope = function (obj) {
     for (var i in obj) {
-      rawScope[i] = obj[i] 
+      rawScope[i.toLowerCase()] = obj[i] 
     }  
   }
 
