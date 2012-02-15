@@ -61,8 +61,8 @@
         lastIndex = currentObj.length - 1;
       }
     }
-    window.os = objectStack;
-    window.co = currentObj;
+    Thumbs.os = objectStack;
+    Thumbs.co = currentObj;
     ret = objectStack[0] || currentObj;
     return ret[0];
   };
@@ -135,11 +135,11 @@
     parentScope: null
   }
 
-  window.scope = scope;
+  Thumbs.scope = scope;
   var currentScope = scope;
   var scopeStack = [];
-  window.scopeStack = scopeStack;
-  window.currentScope = currentScope;
+  Thumbs.scopeStack = scopeStack;
+  Thumbs.currentScope = currentScope;
 
   var ObjProto = Object.prototype
   var toString = ObjProto.toString
@@ -655,10 +655,16 @@
     //console.log(scope)
   }
   
-  var runFile = function (file) {}    
+  var runFile = function (file) {
+    var fs = require("fs");
+    var code = fs.readFileSync(file).toString();
+    var ran = run(code) 
+    return ran;
+  }    
   
   Thumbs.runScriptTags = runScriptTags
   Thumbs.run = run //runs raw code
+  Thumbs.runFile = runFile
  
 
 })();
