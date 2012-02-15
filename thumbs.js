@@ -359,16 +359,28 @@
   // should I treat them like functions?
   // or should I just try to convert to js object
   var convertThumbsArgsToJSArgs = function(args, currentScope) {
-    for (var i = 0; i < args.length; i++) {
-      var arg = args[i]
+    var doConverting = function (arg, i, args) {
       if (arg && arg.type == "fn") {
         var rest = []; // for now
         var nestedArgs = []; //
         var compiledFunction = compileFunction(arg, rest, nestedArgs, currentScope) 
         args[i] = function () {
+          jsArgs = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+          var fnArgs = arg.args
+          var fnArg;
+          for (var j=0; j < jsArgs.length; j++) {
+            fnArg = fnArgs[j]
+            if (fnArg) {
+              compiledFunction.scope.body[fnArg] = jsArgs[j]   
+            }
+          }
           return callThumbsFunction(compiledFunction)  
         }
       }   
+    }
+    for (var i = 0; i < args.length; i++) {
+      var arg = args[i]
+      doConverting(arg, i, args)
     }  
   } 
 

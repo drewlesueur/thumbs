@@ -13,6 +13,8 @@
 <script type="text/plain" src="">
 <script type="text/plain">
 TODO:
+
+
 $ fx strings
 $ lists
 $ call js funciton
@@ -39,8 +41,16 @@ Based on gotos.
 
 </script>
 <script type="text/x-thumbs">
+theConcat * a b
+  $ $a $b
+ret CallThisFunc theConcat
+Eq ret $ hello world
+
 
 NewSay $ hello world
+
+
+
 Eq $volleyball $ volleyball
 
 In 100 *
@@ -475,9 +485,14 @@ answer Add 7 5
 </style>
 <script>
  var start = function () {
-    Thumbs.addScope({newsay: function (word) {
+   Thumbs.addScope({
+     newsay: function (word) {
       console.log("saying: " + word) 
-    }})
+     },
+     callThisFunc: function (fn) {
+       return fn("hello", "world") 
+     }
+     })
     Thumbs.runScriptTags()
   }
 
