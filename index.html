@@ -41,15 +41,92 @@ Based on gotos.
 
 </script>
 <script type="text/x-thumbs">
+
+a 1
+b 2
+c Is a b
+Eq c false
+
+a 1
+b 2
+c Is a b
+Eq c false
+
+
+
+determineAnimal * travel
+  animal $ none
+
+  If
+    > Is travel $legs
+    > animal $ bear
+    > Is travel $bicycle
+    > animal $ human
+    > Is travel $flight
+    > animal $bird
+    > animal $unknown
+  animal
+
+flyingAnimal DetermineAnimal $flight
+Eq flyingAnimal $bird
+
+all4sAnimal DetermineAnimal $legs
+cyclingAnimal DetermineAnimal $bicycle
+unknownAnimal DetermineAnimal $ ???
+
+Eq all4sAnimal $bear
+Eq cyclingAnimal $human
+Eq unknownAnimal $unknown
+
+
+makeguess * numb
+  Is numb 7
+    > $ you win
+    > $ you loose
+status Makeguess 7
+status2 MakeGuess 8
+Eq status $ you win
+Eq status2 $ you loose
+
+fac * n
+  Is n 0
+    > 1
+    > nLess1 Sub n 1
+      facNLess1 Fac nLess1
+      Mult n facNLess1
+
+ans Fac 3
+Eq ans 6
+
+sport $ none
+ball $white
+Is ball $white *
+  sport $ volleyball
+Is ball $orange *
+  sport $ basketball
+Eq sport $ volleyball
+
+
+getCookie2 *
+  $ cookie!
+myCookie2 GetCookie2
+Eq myCookie2 $ cookie!
+
+Say myCookie2
+
+$ one line function
+getCookie > $ cookie!
+myCookie GetCookie
+Eq myCookie $ cookie!
+
+
 theConcat * a b
   $ $a $b
 ret CallThisFunc theConcat
 Eq ret $ hello world
 
-
-NewSay $yo $world
-
-
+said NewSay $yo $world
+Eq said $ saying: yo world
 
 Eq $volleyball $ volleyball
 
@@ -69,66 +146,6 @@ singer.sing * song
 
 singing Singer.sing $ moon rock light
 Eq singing $ singing moon rock light
-
-
-makeguess * numb
-  Is numb 7 *
-    $ you win
-  Else *
-    $ you loose
-status Makeguess 7
-status2 MakeGuess 8
-Eq status $ you win
-Eq status2 $ you loose
-
-fac * n
-  Is n 0 *
-    1
-  Else *
-    nLess1 Sub n 1
-    facNLess1 Fac nLess1
-    Mult n facNLess1
-
-ans Fac 3
-Eq ans 6
-
-determineAnimal * travel
-  animal $ none
-  Is travel $legs *
-    animal $ bear
-  ElseIs travel $bicycle *
-    animal $ human
-  ElseIs travel $flight *
-    animal $bird
-  Else *
-    animal $unknown
-  animal
-
-flyingAnimal DetermineAnimal $flight
-Eq flyingAnimal $bird
-
-all4sAnimal DetermineAnimal $legs
-cyclingAnimal DetermineAnimal $bicycle
-unknownAnimal DetermineAnimal $ ???
-
-Eq all4sAnimal $bear
-Eq cyclingAnimal $human
-Eq unknownAnimal $unknown
-
-
-
-sport $ none
-ball $white
-Is ball $white *
-  sport $ volleyball
-Is ball $orange *
-  sport $ basketball
-
-Eq sport $ volleyball
-
-  
-  
-  
 
 
 argTest * a b c d e
@@ -487,7 +504,7 @@ answer Add 7 5
  var start = function () {
    Thumbs.addScope({
      newsay: function (word, word2) {
-      console.log("saying: " + word + " " + word2) 
+       return "saying: " + word + " " + word2
      },
      callThisFunc: function (fn) {
        return fn("hello", "world") 

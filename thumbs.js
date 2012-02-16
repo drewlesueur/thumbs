@@ -67,39 +67,38 @@
     return ret[0];
   };
 
+  
+  var myIf = function () { //theIf, theThen, rest..., last
+    var last, rest, theIf, theThen, _i;
+    theIf = arguments[0], theThen = arguments[1], rest = 4 <= arguments.length ? __slice.call(arguments, 2, _i = arguments.length - 1) : (_i = 2, []), last = arguments[_i++];
+    if (theIf()) {
+      return theThen() 
+    } else if (rest.length) {
+      return myIf.apply(null, __slice.call(rest).concat([last]));
+      //myIf rest..., last
+    } else if (last) {
+      return last()
+    }
+  }
+
   var rawScope = {
     "in": function (time, f) {
       setTimeout(f, time)
     },
-    "is": function (a, b, c) {
-      if (a == b) {
-        lastIf = true 
-        lastIfAns = c()
-        return lastIfAns
-      } else {
-        lastIf = false 
-        return lastIfAns
-      }
-    },
-    "elseis": function (a, b, c) {
-      if (lastIf == false) {
-        if (a == b) {
-          lastIf = true 
-          lastIfAns = c()
-          return lastIfAns
-        } else {
-          lastIf = false 
-          return lastIfAns
-        }
-      }   
-    },
-    "else": function (c) {
-      if (lastIf == false) {
-        lastIfAns = c()
-        return lastIfAns
-      } else {
-        return lastIfAns
-      }
+    "if": myIf,
+    "false": false,
+    "true": true,
+    "is": function (a, b) {
+      var args;
+      args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+
+      if (args.length == 2) return a == b
+      
+      var condition = function () {return a == b}
+      args = args.slice(2)
+      args.unshift(condition)
+      return myIf.apply(null, args)
+
     },
     "say": function (x) {
        console.log(x)
@@ -187,6 +186,12 @@
     return value
   }
 
+  var setOneLineFunction = function (rest, nestedArgs, currentScope) {
+    var fakeLineNumber = lineNumber //not sure this is the right line number
+    rest.unshift(fakeLineNumber)
+    nestedArgs.unshift(rest)
+    return setFunction([], nestedArgs, currentScope)
+  }
 
   var setFunction = function (rest, nestedArgs, currentScope) {
     var value = {
@@ -247,6 +252,8 @@
       value = setString(rest, nestedArgs, currentScope)
     } else if (second == "*") {
       value = setFunction(rest, nestedArgs, currentScope)
+    } else if (second == ">") {
+      value = setOneLineFunction(rest, nestedArgs, currentScope)
     } else if ((second - 0) == second) {
       value = setNumber(second) 
     } else if (second && second.match(/^[A-Z]/)) {
@@ -374,6 +381,7 @@
               compiledFunction.scope.body[fnArg] = jsArgs[j]   
             }
           }
+          compiledFunction.scope.args = jsArgs
           return callThumbsFunction(compiledFunction)  
         }
       }   
@@ -463,7 +471,7 @@
   }
   
   var isStartSymbol = function (thing) {
-    return thing && thing.match && thing.match(/^[\*|\#|\$|\+]$/) 
+    return thing && thing.match && thing.match(/^[\*|\#|\$|\+|\>]$/) 
   } 
   var callFunction = function (first, second, rest, nestedArgs, currentScope) {
     var fn = get(first.toLowerCase(), currentScope) 
@@ -622,7 +630,7 @@
 
 
   var addUI = function () {
-    var codeEl = document.querySelector('#code')
+    var codeEl = document.createElement("div")
     for (var i = 0; i < originalLines.length; i++) {
       var lineEl = document.createElement('pre')   
       lineEl.setAttribute("class", "line")
