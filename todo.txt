@@ -1,0 +1,35 @@
+TODO:
+
+*****
+Reimplement the whole thing using simple gotos and create your own stack etc,
+That will allow you to do tail call optimization
+Reimplement in subset of thumbs that will be easy to convert to other languages
+You may need to convert nested calls out.
+Based on gotos.
+****
+
+lists
+splats
+make functions able to be called with . and :
+add reference to caller scope
+ability to set parent on object to lookup
+property missing object?prop
+conect everything by function calls
+change it so when you call a js function you also pass in scope
+maybe a % operator that allows you to do
+  math equations
+  like:
+  answer % -b + (sqrt(b^2 - 4*a*c)) / 2a
+  with parens, order of operations, everyting
+
+Convert js args to thumbs args
+  arrays and objects --> thumbs lists and maps
+non interpolating strings
+
+objects as keys
+create a new function with scope
+dynamically set a variable to the current scope
+maybe one more level of indirection for strings and numbers?
+
+space character
+more library calls (use @caolan's async.js)

@@ -7,40 +7,11 @@
   }
 </style>
 <script src="thumbs.js"></script>
-<script type="text/x-thumbs2">
-</script>
 
-<script type="text/plain" src="">
-<script type="text/plain">
-TODO:
-
-
-$ fx strings
-$ lists
-$ call js funciton
-$ getter setter lookup / no just make functions able to be called with .
-$ add reference to caller scope
-$ set parent on object to lookup
-$ property missing object?prop
-$ conect everything by function calls
-$ change it so when you call a js function you also pass in scope
-$ maybe a % operator that allows you to do
-  math equations
-  like:
-  answer % -b + (sqrt(b^2 - 4*a*c)) / 2a
-  with parens, order of operations, everyting
-
-*****
-Reimplement the whole thing using simple gotos and create your own stack etc,
-That will allow you to do tail call optimization
-Reimplement in subset of thumbs that will be easy to convert to other languages
-You may need to convert nested calls out.
-Based on gotos.
-****
-
-
-</script>
 <script type="text/x-thumbs">
+
+countries + $chile $mexico $colombia $usa
+Eq countries.0 $chile
 
 a 1
 b 2
@@ -279,36 +250,9 @@ prop2 $name
 caribe $ caribe atomico
 Eq band:prop.caribe:prop2 caribe
 
-$ todo: do this
-  person #
-  person.name $ Drew LeSueur
-  Eq person.name $ Drew LeSueur
-
-$ todo: do this to
-  MyCoolFunc a b
-    c d e
-
-
-$ TODO: something like this (look at nestedArgs when you are compiling a func)
-  SomeFuncCall
-    #
-      fun $times
-    * success
-      DO the success
-    * error
-      DO the error
-    $
-      the string stuff
-    anotherArg andAnotherArg
-    andAnother
-    AndAFunctionCall forArg
-   
-  Loop collection * x
-    print x
-
-  Loop collection
-    * x
-      do something
+person #
+person.name $ Drew LeSueur
+Eq person.name $ Drew LeSueur
 
 $ assigning a function to another and calling it      
 action adding    
@@ -330,15 +274,11 @@ Eq sheep 99
 sendText * text
   ret $ a text was sent to $text.to from $text.from
 
-$  todo: non interpolating strings
-
 status SendText #
   from $drew
   to $aimee
 
 Eq status $ a text was sent to aimee from drew
-
-$ TODO: tail call optimization
 
 saying * message
   Say message
@@ -372,7 +312,6 @@ argTest2 * a b c d e
 t ArgTest2 $h $e $l $l $o
 Eq t $ h e l l o
 
-$ todo: these
 argTest3 * a b c d e
   $ $a $b $c $d $e
 t ArgTest3 $h $e $l $l $o
@@ -445,27 +384,6 @@ answer Add 7 5
 <script type="text/javascript">
 
 
-</script>
-<script type="text/x-todo">
-  <h1>Thumbs. A simple programming language</h1>
-  What the symbols mean
-  <pre class="legend" style="font-size: 40px">
-  * function
-# map (hash)
-  + list (array)
-  $ text (string)
-  </pre>
-
-  A Hello world
-
-
-  //todo. objects as keys
-  //todo. splats! and create a new function with scope
-  //dynamically set a variable to the current scope
-  // getters and setters. and propertymissings
-  // allow for easy "Say $ hello wolrd"
-  //one more level of indirection for strings and numbers?
-  //tail call optimization
 </script>
 <link rel="stylesheet" href="dejavu/stylesheet.css" type="text/css" charset="utf-8">
 <style>
