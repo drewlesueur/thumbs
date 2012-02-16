@@ -47,7 +47,7 @@ ret CallThisFunc theConcat
 Eq ret $ hello world
 
 
-NewSay $ hello world
+NewSay $yo $world
 
 
 
@@ -486,8 +486,8 @@ answer Add 7 5
 <script>
  var start = function () {
    Thumbs.addScope({
-     newsay: function (word) {
-      console.log("saying: " + word) 
+     newsay: function (word, word2) {
+      console.log("saying: " + word + " " + word2) 
      },
      callThisFunc: function (fn) {
        return fn("hello", "world") 

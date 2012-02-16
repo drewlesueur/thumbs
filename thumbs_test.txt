@@ -1,3 +1,16 @@
+$
+If 
+  . Is x 3
+  . Say yay
+  . Is x 4
+  . Say nay
+
+
+  x . print y
+
+  
+  
+
 In 100 *
   Say $ 100 miliseconds passed
 
