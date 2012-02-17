@@ -192,6 +192,7 @@
     nestedArgs.unshift(rest)
     return setFunction([], nestedArgs, currentScope)
   }
+  
 
   var setFunction = function (rest, nestedArgs, currentScope) {
     var value = {
@@ -250,6 +251,8 @@
   var generateValue = function (second, rest, nestedArgs, currentScope) {
     if (second == "$") { //todo. do a faster way of converting to string //cache or something
       value = setString(rest, nestedArgs, currentScope)
+    } else if (second == "+") {
+      value = setList(rest, nestedArgs, currentScope)
     } else if (second == "*") {
       value = setFunction(rest, nestedArgs, currentScope)
     } else if (second == ">") {
@@ -311,6 +314,16 @@
     }
   } 
    
+  var setList = function (rest, nestedArgs, currentScope) {
+    var args = []
+    convertArgs(0, args, {}, {}, rest, nestedArgs, currentScope) 
+    return {
+      type: "ls",
+      body: args,
+      parentScope: null //for now
+    }
+  }
+
   var convertArgs = function (argsIndex, args, newScope, fn, rest, nestedArgs, currentScope, opts ) {
     var foundInnerObject = false;
     //TODO: optimize this because the fn calling this one has already com
@@ -351,7 +364,9 @@
       }
       
     } 
-    newScope.body.args = args;
+    if (newScope && newScope.body) {
+      newScope.body.args = args;
+    }
     return  {
       foundInnerObject: foundInnerObject,
       argsIndex: argsIndex + i
@@ -376,7 +391,7 @@
           var fnArgs = arg.args
           var fnArg;
           for (var j=0; j < jsArgs.length; j++) {
-            fnArg = fnArgs[j]
+            fnArg = fnArgs[j].toLowerCase()
             if (fnArg) {
               compiledFunction.scope.body[fnArg] = jsArgs[j]   
             }
@@ -495,28 +510,29 @@
     if (symbol == ":") { //either . or :
       name = get(name, originalScope) 
     }
-    var value = get(name, lookupScope)
+    var value = get(name, lookupScope, {inChain: true})
     return chainGet(names, symbols, value, originalScope);
   }
 
 
   //TODO: get can be an object! change
   //TODO: also include getter and setter options
-  var get = function (name, lookupScope) {
+  var get = function (name, lookupScope, opts) {
+    opts = opts || {}
     lookupScope = lookupScope || currentScope;
+
+    if (name == "0") {
+      var a = 1 
+    }
 
     if (!name) {
       return name
-    }
-
-    if (isObject(name)) {
-      var a = 1; 
     }
     
     try {
       if (name.charAt && name.charAt(0) == "$") {
         return name.substring(1) 
-      } else if (name - 0 == name) {
+      } else if (name - 0 == name && !opts.inChain) { //wierd
         return name - 0
       }
       name = name.toLowerCase()
@@ -531,7 +547,7 @@
       return chainGet(names, symbols, lookupScope, lookupScope)
     }
 
-    if (name in lookupScope.body) {
+    if (name in lookupScope.body) { //todo: watch out for numerical keys vs string keys
       return lookupScope.body[name] 
     } else if (lookupScope.parentScope) {
       return get(name, lookupScope.parentScope) 

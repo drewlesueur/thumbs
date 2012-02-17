@@ -10,7 +10,7 @@ Based on gotos.
 
 lists
 splats
-make functions able to be called with . and :
+make functions able to be called with . and : (dot and colon)
 add reference to caller scope
 ability to set parent on object to lookup
 property missing object?prop
@@ -33,3 +33,5 @@ maybe one more level of indirection for strings and numbers?
 
 space character
 more library calls (use @caolan's async.js)
+
+an async library like async.js also using andThen, or where callback is added to scope

@@ -10,8 +10,10 @@
 
 <script type="text/x-thumbs">
 
+
 countries + $chile $mexico $colombia $usa
 Eq countries.0 $chile
+Say countries.2
 
 a 1
 b 2
@@ -91,8 +93,8 @@ myCookie GetCookie
 Eq myCookie $ cookie!
 
 
-theConcat * a b
-  $ $a $b
+theConcat * a theB
+  $ $a $theB
 ret CallThisFunc theConcat
 Eq ret $ hello world
 
