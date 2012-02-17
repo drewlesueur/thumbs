@@ -8,9 +8,7 @@ You may need to convert nested calls out.
 Based on gotos.
 ****
 
-lists
 splats
-make functions able to be called with . and : (dot and colon)
 add reference to caller scope
 ability to set parent on object to lookup
 property missing object?prop

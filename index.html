@@ -8,13 +8,31 @@
 </style>
 <script src="thumbs.js"></script>
 
-<script type="text/x-thumbs">
+<script type="text/x-thumbs" id="hello_world" data-name="Hello world">
+  $ Alert $ Hello World
+</script>
 
+<script type="text/x-thumbs" id="hello_world" data-name="A function">
+  sayHi * name
+    $ hello $name
+</script>
+
+<script type="text/x-thumbs" id="tests">
 coolify * word
   $ $word cool!
 
+dudeify * word
+  $ $word dude
+
+buzz Dudeify Coolify $keys
+Eq buzz $ keys cool! dude
+
 coolified coolify.phones
 Eq coolified $ phones cool!
+
+
+
+
 
 myWord $square
 Eq coolify:myWord $ square cool!
@@ -444,7 +462,8 @@ answer Add 7 5
 </script>
 </head>
 <body onload="start()">
-
+<h1>Thumbs</h1>
+<div>A programming language for your thumbs.</div>
 </body>
 </html>
 

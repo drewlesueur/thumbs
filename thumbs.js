@@ -103,6 +103,9 @@
     "say": function (x) {
        console.log(x)
     },
+    "alert": function (x) {
+      alert(x) 
+    },
     "sub": function (a, b) {
       return a - b 
     },
@@ -148,6 +151,9 @@
   var isObject = function (obj) {
     return obj === Object(obj);
   }
+  var isString = function(obj) {
+    return toString.call(obj) == '[object String]';
+  };
 
   var __slice = Array.prototype.slice;
   var slice = __slice;
@@ -334,6 +340,9 @@
       var rest = rest.slice(1)
       if (second && second.match && second.match(/^[A-Z]/)) {
         var ret = callFunction(second, rest[0], rest.slice(1), nestedArgs, currentScope)
+        if (isString(ret)) {
+          ret = "$" + ret 
+        } // todo: i don't like this way. Do I need extra level of indirection for strings
         var rest = [ret];
       } else {
         var rest = [second].concat(__slice.call(rest))
