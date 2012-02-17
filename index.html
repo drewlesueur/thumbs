@@ -8,14 +8,56 @@
 </style>
 <script src="thumbs.js"></script>
 
-<script type="text/x-thumbs" id="hello_world" data-name="Hello world">
-  $ Alert $ Hello World
+<script type="text/x-thumbs-test" id="hello_world" data-name="Hello world">
+Alert $ Hello World
+</script>
+<script type="text/plain" id="hello_world_js" data-name="Hello world js">
+  alert("Hello world");
 </script>
 
-<script type="text/x-thumbs" id="hello_world" data-name="A function">
-  sayHi * name
-    $ hello $name
+<script type="text/x-thumbs-test" id="function" data-name="A function">
+sayHi * name
+  $ Hello $name
+
+Alert SayHi $thumbs
 </script>
+<script type="text/plain" id="function_js" data-name="A function js">
+  var sayHi = function (name) {
+    return "Hello " + name; 
+  }
+  alert(sayHi("thumbs"));
+</script>
+
+<script type="text/x-thumbs-test" id="closure" data-name="A closure">
+incrementorMaker *
+  x 0
+  incrementor *
+    x Add 1 x
+inc IncrementorMaker
+a Inc
+b Inc
+c Inc
+
+Alert $ closure results: $a $b $c
+</script>
+<script type="text/plain" id="closure_js" data-name="A closure js">
+  var incrementorMaker = function () {
+    var x = 0;
+    var incrementor = function () {
+      x += 1;
+      return x;
+    }
+    return incrementor;
+  }
+  var inc = incrementorMaker();
+  var a = inc();
+  var b = inc();
+  var c = inc();
+
+  alert("closure results: " + a + " " + b + " " + c)
+</script>
+
+
 
 <script type="text/x-thumbs" id="tests">
 coolify * word
@@ -446,6 +488,8 @@ answer Add 7 5
   
 }
 </style>
+
+
 <script>
  var start = function () {
    Thumbs.addScope({
@@ -454,16 +498,93 @@ answer Add 7 5
      },
      callThisFunc: function (fn) {
        return fn("hello", "world") 
-     }
+     },
+     find: function (selector) {
+       return document.querySelector(selector)
+     },
+     creatEl: function (what) {
+       return document.createElement(what) 
+     } 
      })
-    Thumbs.runScriptTags()
-  }
+   Thumbs.runScriptTags()
+   var thumbsCode = document.querySelector("#thumbs_code")
+   var jsCode = document.querySelector("#js_code")
+   var menu = document.querySelector("#menu")
+   var tests = document.querySelectorAll('[type="text/x-thumbs-test"]')
+   var firstClick = null;
+   var currentCode = null;
+   var eachTest = function (test) {
+     var link = document.createElement('a') 
+     link.innerHTML = test.getAttribute('data-name')
+     var id = test.id
+     var jsVersion = document.querySelector("#" + id + "_js")
+     
+     link.href = "#"
+     var theOnclick = function () { 
+       currentCode = test.innerHTML.substring(1)
+       thumbsCode.innerHTML = currentCode;
+       jsCode.innerHTML = jsVersion.innerHTML.substring(1)
+       return false;
+     }
+     if (!firstClick) {
+       firstClick = theOnclick 
+     }
+     link.onclick = theOnclick 
+     link.style.display = "block"
+     menu.appendChild(link)
+   }
+   for (var i=0; i < tests.length; i++) {
+     eachTest(tests[i])   
+   }
+   firstClick()
+   var runButton = document.querySelector("#run")
+   runButton.onclick = function () {
+     Thumbs.run(currentCode)
+   }
+ }
 
 </script>
 </head>
 <body onload="start()">
 <h1>Thumbs</h1>
-<div>A programming language for your thumbs.</div>
+<div>A programming language for your thumbs.
+  
+<span style="font-size: 10px;">
+By <a href="http://twitter.com/drewlesueur">Drew LeSueur</a>
+<a href="http://github.com/drewlesueur/thumbs">source</a>
+</span>
+</div>
+<br />
+
+<div>
+  <table width="100%">
+    <tr>
+      <td width="20%" valign="top">
+        <div id="menu"></div>
+      </td>
+      <td width="80%" valign="top">
+        <table>
+          <tr>
+            <td>
+              <input id="run" style="margin-left:10px;" type="button" value="Run" />
+              
+            </td>
+            <td>
+            </td>
+          </tr>
+          <tr>
+            <td valign="top">
+              <pre id="thumbs_code" style="margin: 10px;"></div>
+            </td>
+            <td valign="top">
+              <pre id="js_code" style="margin: 10px;"></div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
 </body>
 </html>
 
