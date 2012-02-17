@@ -1,6 +1,6 @@
 <!doctype html>
 <head>
-<meta name="viewport" content="initial-scale = 1.0" />
+  <!--<meta name="viewport" content="initial-scale = 1.0" />-->
 <style>
   * {
     font-family: Menlo, 'Bitstream Vera Sans Mono', 'DejaVu Mono', 'Monospace'
@@ -33,12 +33,15 @@ incrementorMaker *
   x 0
   incrementor *
     x Add 1 x
+
 inc IncrementorMaker
+
 a Inc
 b Inc
 c Inc
 
-Alert $ closure results: $a $b $c
+Alert $
+  closure results: $a $b $c
 </script>
 <script type="text/plain" id="closure_js" data-name="A closure js">
   var incrementorMaker = function () {
@@ -49,12 +52,15 @@ Alert $ closure results: $a $b $c
     }
     return incrementor;
   }
+
   var inc = incrementorMaker();
+
   var a = inc();
   var b = inc();
   var c = inc();
 
-  alert("closure results: " + a + " " + b + " " + c)
+  alert("closure results: " +
+    a + " " + b + " " + c)
 </script>
 
 
@@ -516,6 +522,7 @@ answer Add 7 5
    var eachTest = function (test) {
      var link = document.createElement('a') 
      link.innerHTML = test.getAttribute('data-name')
+     link.style.padding = "10px"
      var id = test.id
      var jsVersion = document.querySelector("#" + id + "_js")
      
