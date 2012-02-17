@@ -546,8 +546,11 @@
       symbols.unshift(".")
       return chainGet(names, symbols, lookupScope, lookupScope)
     }
-
-    if (name in lookupScope.body) { //todo: watch out for numerical keys vs string keys
+    
+    if (lookupScope.type == "fn") {
+      var compiledFunction = compileFunction(lookupScope, ["$" + name], [], {}) //todo: no current scope?
+      return callThumbsFunction(compiledFunction)  
+    } else if (name in lookupScope.body) { //todo: watch out for numerical keys vs string keys
       return lookupScope.body[name] 
     } else if (lookupScope.parentScope) {
       return get(name, lookupScope.parentScope) 
