@@ -67,11 +67,16 @@ Alert $
   var rombus = "4 equal sides"
   var rectangles = ["golden", "square", "long"]
   var qs = document.querySelector
+  var jsObj = {a:1, smile: function () {return 100}}
 </script>
 
 <script type="text/x-thumbs" id="tests">
+a someFun
+ret JsObj.smile
+Eq ret 100
 
 Eq qs document.querySelector
+Eq jsObj.a 1
 
 getNumber > 7
 $ todo!

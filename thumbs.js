@@ -504,7 +504,7 @@
     return thing && thing.match && thing.match(/^[\*|\#|\$|\+|\>]$/) 
   } 
   var callFunction = function (first, second, rest, nestedArgs, currentScope) {
-    var fn = get(first.toLowerCase(), currentScope) 
+    var fn = get(first/*.toLowerCase()*/, currentScope) 
     if (second) { 
       var rest = [second].concat(__slice.call(rest))
     }
@@ -558,7 +558,7 @@
         return chainGet(names, symbols, lookupScope, lookupScope)
       }
 
-      var oldName = name
+      var oldName = name.charAt(0).toLowerCase() + name.slice(1)
       name = name.toLowerCase()
     } catch (e) {
       var b = 1; 
