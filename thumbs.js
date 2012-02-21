@@ -3,8 +3,10 @@
  var Thumbs;
   if (typeof exports !== 'undefined') {
     Thumbs = exports;
+    Thumbs.global = global
   } else {
     Thumbs = root.Thumbs = {};
+    Thumbs.global = window
   }
 
   var splitText = function (text) {
@@ -119,7 +121,7 @@
     "add": function () {
       var sum = 0;
       for (var i = 0; i < arguments.length; i++)
-        sum += arguments[i] 
+        sum += arguments[i] - 0
       return sum;
     },
     eq: function (a, b) {
@@ -151,6 +153,10 @@
   var isObject = function (obj) {
     return obj === Object(obj);
   }
+  var isArray = function(obj) { //todo: use native if available like underscore.js
+    return toString.call(obj) == '[object Array]';
+  };
+
   var isString = function(obj) {
     return toString.call(obj) == '[object String]';
   };
@@ -340,7 +346,7 @@
       var rest = rest.slice(1)
       if (second && second.match && second.match(/^[A-Z]/)) {
         var ret = callFunction(second, rest[0], rest.slice(1), nestedArgs, currentScope)
-        if (isString(ret)) {
+        if (isString(ret) || ret.toString().match(/^\d/)) { //TODO: or is number!!!!!
           ret = "$" + ret 
         } // todo: i don't like this way. Do I need extra level of indirection for strings
         var rest = [ret];
@@ -544,25 +550,33 @@
       } else if (name - 0 == name && !opts.inChain) { //wierd
         return name - 0
       }
+
+      var names = name.split(/\.|\:/)
+      if (names.length > 1) {
+        var symbols = name.match(/\.|\:/g)
+        symbols.unshift(".")
+        return chainGet(names, symbols, lookupScope, lookupScope)
+      }
+
+      var oldName = name
       name = name.toLowerCase()
     } catch (e) {
       var b = 1; 
     }
 
-    var names = name.split(/\.|\:/)
-    if (names.length > 1) {
-      var symbols = name.match(/\.|\:/g)
-      symbols.unshift(".")
-      return chainGet(names, symbols, lookupScope, lookupScope)
-    }
     
     if (lookupScope.type == "fn") {
       var compiledFunction = compileFunction(lookupScope, ["$" + name], [], {}) //todo: no current scope?
       return callThumbsFunction(compiledFunction)  
-    } else if (name in lookupScope.body) { //todo: watch out for numerical keys vs string keys
+    } else if (lookupScope.body && name in lookupScope.body) { //todo: watch out for numerical keys vs string keys
       return lookupScope.body[name] 
     } else if (lookupScope.parentScope) {
       return get(name, lookupScope.parentScope) 
+    //TODO: detirmine better way to tell if its not a thumbs function than looking for "parentScope"
+    } else if (isArray(lookupScope) || (isObject(lookupScope) && !("parentScope" in lookupScope))) { //if its a js array or object
+      return lookupScope[oldName]
+    } else if (oldName in Thumbs.global) {
+      return Thumbs.global[oldName]
     } else {
       return null;
     }
