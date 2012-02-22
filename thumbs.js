@@ -188,7 +188,7 @@
     } 
     var value = rest.join(" ") 
     value += nestedArgs.join("\n")
-    value = value.replace(/\$([^\s]+)/g, function (whole, word) {
+    value = value.replace(/\$([\w]+)/g, function (whole, word) {
       return get(word, currentScope) 
     })
     return value;
@@ -313,7 +313,14 @@
     } else {
       var settingScope = findScopeWithName(name, currentScope)
     }
-    settingScope.body[name] =  value;
+    if (settingScope.body && "parentScope" in settingScope) {
+      settingScope.body[name] =  value;
+    } else { //todo: test this
+      if (value.type == "fn") {
+        value = doConverting(value, settingScope) 
+      }
+      settingScope[name] =  value;
+    }
     //todo make an option for always setting the current scope
     //like var is in javascript
     return value
@@ -395,30 +402,33 @@
   //TODO: add objects, whats the best way? 
   // should I treat them like functions?
   // or should I just try to convert to js object
-  var convertThumbsArgsToJSArgs = function(args, currentScope) {
-    var doConverting = function (arg, i, args) {
-      if (arg && arg.type == "fn") {
-        var rest = []; // for now
-        var nestedArgs = []; //
-        var compiledFunction = compileFunction(arg, rest, nestedArgs, currentScope) 
-        args[i] = function () {
-          jsArgs = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-          var fnArgs = arg.args
-          var fnArg;
-          for (var j=0; j < jsArgs.length; j++) {
-            fnArg = fnArgs[j].toLowerCase()
-            if (fnArg) {
-              compiledFunction.scope.body[fnArg] = jsArgs[j]   
-            }
+  var doConverting = function (arg, currentScope) {
+    if (arg && arg.type == "fn") {
+      var rest = []; // for now
+      var nestedArgs = []; //
+      var compiledFunction = compileFunction(arg, rest, nestedArgs, currentScope) 
+      var ret = function () {
+        jsArgs = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        var fnArgs = arg.args
+        var fnArg;
+        for (var j=0; j < jsArgs.length; j++) {
+          fnArg = fnArgs[j]
+          if (fnArg) {
+            fnArg.toLowerCase()
+            compiledFunction.scope.body[fnArg] = jsArgs[j]   
           }
-          compiledFunction.scope.args = jsArgs
-          return callThumbsFunction(compiledFunction)  
         }
-      }   
-    }
+        compiledFunction.scope.args = jsArgs
+        return callThumbsFunction(compiledFunction)  
+      }
+      return ret
+    }   
+    return arg
+  }
+  var convertThumbsArgsToJSArgs = function(args, currentScope) {
     for (var i = 0; i < args.length; i++) {
       var arg = args[i]
-      doConverting(arg, i, args)
+      args[i] = doConverting(arg, currentScope)
     }  
   } 
 
@@ -574,7 +584,11 @@
       return get(name, lookupScope.parentScope) 
     //TODO: detirmine better way to tell if its not a thumbs function than looking for "parentScope"
     } else if (isArray(lookupScope) || (isObject(lookupScope) && !("parentScope" in lookupScope))) { //if its a js array or object
-      return lookupScope[oldName]
+      var ret = lookupScope[oldName]
+      if (isFunction(ret)) {
+        ret = __bind(ret, lookupScope) //TODO: write a test for this. 
+      }
+      return ret;
     } else if (oldName in Thumbs.global) {
       return Thumbs.global[oldName]
     } else {
@@ -737,5 +751,4 @@
  
 
 })();
-
 
