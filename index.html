@@ -68,12 +68,18 @@ Alert $
   var rectangles = ["golden", "square", "long"]
   var qs = document.querySelector
   var jsObj = {a:1, smile: function () {return 100}}
+  var plow = function () {return "king"}
 </script>
 
 <script type="text/x-thumbs" id="tests">
+body document.body
+body.onclick > Alert $clicked
+
 a someFun
 ret JsObj.smile
 Eq ret 100
+ret Plow 1
+Eq ret king
 
 Eq qs document.querySelector
 Eq jsObj.a 1

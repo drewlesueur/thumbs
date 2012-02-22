@@ -38,3 +38,7 @@ more library calls (use @caolan's async.js)
 an async library like async.js also using andThen, or where callback is added to scope
 
 write a simle loop function
+
+
+write more tests with javascript interaction
+double nested multi line string
