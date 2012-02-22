@@ -67,21 +67,84 @@ Alert $
   var rombus = "4 equal sides"
   var rectangles = ["golden", "square", "long"]
   var qs = document.querySelector
-  var jsObj = {a:1, smile: function () {return 100}}
+  var jsObj = {a:1, smile: function () {return 100}, go: function () {this.a = 2}}
   var plow = function () {return "king"}
+  
+  //var name must be lower case
+  var otherObj = {
+    add1: function (x) { return x - 0 + 1 },
+    add2: function (x) {return x - 0 + 2},
+    numb: 3
+  } 
+
+  var eat = function (a) {
+    return a.substring(1) 
+  }
+
+  var takeFunc = function (fn) {
+    return fn(1,2,3) 
+  } 
+
+  var fakeButton = {}
+  var triggerOnclick = function () {
+    return fakeButton.onclick(1) 
+  }
+
 </script>
 
 <script type="text/x-thumbs" id="tests">
+
+multiline $
+  multi line with
+    indents
+  non indents
+
+Eq multiline $ multi line with\n  indents\nnon indents
+
+ret Plow
+Eq ret $ king
+
+numb OtherObj.add2 3
+Eq numb 5
+
+numb OtherObj.add1 OtherObj.add2 3
+Eq numb 6
+
+numb OtherObj.add1 OtherObj.add2 otherObj.numb
+Eq numb 6
+
+fakeButton.onclick * a
+  Add a 10 
+
+value TriggerOnclick
+Eq value 11
+
+Eq 1 JsObj.a
+JsObj.go
+Eq 2 JsObj.a
+
+
+TakeFunc * a b
+  Add a b
+
+
+smaller Eat $ word
+Eq smaller $ord
+
+name $drew
+sentance $ my name is drew.
+sentance2 $ my name is $name.
+Eq sentance sentance2
+
+
 body document.body
 body.onclick > Alert $clicked
 
 a someFun
 ret JsObj.smile
 Eq ret 100
-ret Plow 1
-Eq ret king
 
-Eq qs document.querySelector
+
 Eq jsObj.a 1
 
 getNumber > 7

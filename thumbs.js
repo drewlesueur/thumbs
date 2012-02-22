@@ -586,7 +586,7 @@
     } else if (isArray(lookupScope) || (isObject(lookupScope) && !("parentScope" in lookupScope))) { //if its a js array or object
       var ret = lookupScope[oldName]
       if (isFunction(ret)) {
-        ret = __bind(ret, lookupScope) //TODO: write a test for this. 
+        ret = __bind(ret, lookupScope)
       }
       return ret;
     } else if (oldName in Thumbs.global) {
