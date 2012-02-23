@@ -93,13 +93,31 @@ Alert $
 </script>
 
 <script type="text/x-thumbs" id="tests">
+str $
+  a
+  b
 
 multiline $
   multi line with
     indents
+    more
+    300
   non indents
+  more
 
-Eq multiline $ multi line with\n  indents\nnon indents
+Eq multiline $ 
+  multi line with
+    indents
+    more
+    300
+  non indents
+  more2
+
+
+theConcat * a theB
+  $ $a $theB
+ret CallThisFunc theConcat
+Eq ret $ hello world
 
 ret Plow
 Eq ret $ king
@@ -144,8 +162,6 @@ a someFun
 ret JsObj.smile
 Eq ret 100
 
-
-Eq jsObj.a 1
 
 getNumber > 7
 $ todo!
@@ -263,10 +279,6 @@ myCookie GetCookie
 Eq myCookie $ cookie!
 
 
-theConcat * a theB
-  $ $a $theB
-ret CallThisFunc theConcat
-Eq ret $ hello world
 
 said NewSay $yo $world
 Eq said $ saying: yo world
@@ -444,7 +456,9 @@ sheep DoThisThing2 90 9 * c d
 Eq sheep 99
 
 sendText * text
-  ret $ a text was sent to $text.to from $text.from
+  to text.to
+  from text.from
+  ret $ a text was sent to $to from $from
 
 status SendText #
   from $drew

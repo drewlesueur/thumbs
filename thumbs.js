@@ -127,6 +127,7 @@
     eq: function (a, b) {
       if (a != b) {
         console.log(a + " isn't " + b + " on line " + lineNumber) 
+        console.log(originalLines[lineNumber])
       }  
     },
     neg: function (a) {
@@ -181,11 +182,19 @@
     };
   };
 
+  var convertStringNestedArgsToString = function (nestedArgs) {
+    for (var i = 0; i < nestedArgs.length; i++) {
+      if (nestedArgs[i][0] - 0 == nestedArgs[i][0] - 0) {
+        nestedArgs[i] = nestedArgs[i].slice(1).join(" ") //slice to remove line number
+      } else {
+        convertStringNestedArgsToString(nestedArgs[i])
+        nestedArgs[i] = nestedArgs[i].join("\n  ") //slice to remove line number
+      }
+    } 
+  }
 
   var setString = function (rest, nestedArgs, currentScope) {
-    for (var i = 0; i < nestedArgs.length; i++) {
-      nestedArgs[i] = nestedArgs[i].slice(1).join(" ") //slice to remove line number
-    } 
+    convertStringNestedArgsToString(nestedArgs)
     var value = rest.join(" ") 
     value += nestedArgs.join("\n")
     value = value.replace(/\$([\w]+)/g, function (whole, word) {
@@ -414,7 +423,7 @@
         for (var j=0; j < jsArgs.length; j++) {
           fnArg = fnArgs[j]
           if (fnArg) {
-            fnArg.toLowerCase()
+            fnArg = fnArg.toLowerCase()
             compiledFunction.scope.body[fnArg] = jsArgs[j]   
           }
         }
