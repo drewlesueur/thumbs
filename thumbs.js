@@ -362,7 +362,7 @@
       var rest = rest.slice(1)
       if (second && second.match && second.match(/^[A-Z]/)) {
         var ret = callFunction(second, rest[0], rest.slice(1), nestedArgs, currentScope)
-        if (isString(ret) && ret.toString().match(/^\d/)) { //TODO: or is number!!!!!
+        if (ret && (isString(ret) || ret.toString().match(/^\d/))) { //TODO: or is number!!!!!
           ret = "$" + ret 
         } // todo: i don't like this way. Do I need extra level of indirection for strings
         var rest = [ret];

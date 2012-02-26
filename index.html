@@ -90,9 +90,24 @@ Alert $
     return fakeButton.onclick(1) 
   }
 
+  var crazyFunction = function () {
+    return "yo quiero verla" 
+  }
+
 </script>
 
 <script type="text/x-thumbs" id="tests">
+
+nullFunc *
+b Add NullFunc
+$ the above shouldnt throw an error
+
+myFunc *
+  CrazyFunction
+
+phrase MyFunc
+Eq phrase $ yo quiero verla
+
 str $
   a
   b
