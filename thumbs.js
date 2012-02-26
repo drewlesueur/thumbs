@@ -362,7 +362,7 @@
       var rest = rest.slice(1)
       if (second && second.match && second.match(/^[A-Z]/)) {
         var ret = callFunction(second, rest[0], rest.slice(1), nestedArgs, currentScope)
-        if (isString(ret) || ret.toString().match(/^\d/)) { //TODO: or is number!!!!!
+        if (isString(ret) && ret.toString().match(/^\d/)) { //TODO: or is number!!!!!
           ret = "$" + ret 
         } // todo: i don't like this way. Do I need extra level of indirection for strings
         var rest = [ret];
@@ -577,7 +577,8 @@
         return chainGet(names, symbols, lookupScope, lookupScope)
       }
 
-      var oldName = name.charAt(0).toLowerCase() + name.slice(1)
+      var oldName = opts.oldName || name.charAt(0).toLowerCase() + name.slice(1)
+      opts.oldName = oldName
       name = name.toLowerCase()
     } catch (e) {
       var b = 1; 
@@ -590,7 +591,7 @@
     } else if (lookupScope.body && name in lookupScope.body) { //todo: watch out for numerical keys vs string keys
       return lookupScope.body[name] 
     } else if (lookupScope.parentScope) {
-      return get(name, lookupScope.parentScope) 
+      return get(name, lookupScope.parentScope, opts) 
     //TODO: detirmine better way to tell if its not a thumbs function than looking for "parentScope"
     } else if (isArray(lookupScope) || (isObject(lookupScope) && !("parentScope" in lookupScope))) { //if its a js array or object
       var ret = lookupScope[oldName]
@@ -760,4 +761,3 @@
  
 
 })();
-
