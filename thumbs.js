@@ -132,7 +132,38 @@
     },
     neg: function (a) {
       return -a 
-    }
+    },
+    //TODO: test these functions  
+    replace: function (str, what, what2) {
+     return str.replace(what, what2)
+    },
+    split: function (str, str3) {
+      return str.split(str2)
+    },
+    empty: "",
+    save: function (key, val) {
+      return localStorage[key] = val
+    },
+    load: function (key) {
+      return localStorage[key]
+    }, onFlickr: function (fn) {
+      window.jsonFlickrApi = fn 
+    },
+    //TODO: write a thumbs version as well
+    loop: function (items, fn) {
+      for (var i = 0; i < items.length; i++) {
+        var item = items[i]
+        fn(item, i)
+      } 
+    },
+    concat: function (a, b, c) {
+      return a + b + c; //todo: use var args
+    },
+    //TODO: write a thumbs version as well
+    slice: function (jsarr, a, b) {
+      return jsarr.slice(a, b)
+    } 
+    // end todo
   }  
 
   var scope = {
