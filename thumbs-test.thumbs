@@ -1,0 +1,4 @@
+;set $x 1
+;assert 1 2
+;stop
+
