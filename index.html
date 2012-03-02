@@ -14,6 +14,60 @@ Alert $ Hello World
 <script type="text/plain" id="hello_world_js" data-name="Hello world js">
   alert("Hello world");
 </script>
+<script>
+ var start = function () {
+   Thumbs.addScope({
+     newsay: function (word, word2) {
+       return "saying: " + word + " " + word2
+     },
+     callThisFunc: function (fn) {
+       return fn("hello", "world") 
+     },
+     find: function (selector) {
+       return document.querySelector(selector)
+     },
+     creatEl: function (what) {
+       return document.createElement(what) 
+     } 
+   })
+   var thumbsCode = document.querySelector("#thumbs_code")
+   var jsCode = document.querySelector("#js_code")
+   var menu = document.querySelector("#menu")
+   var tests = document.querySelectorAll('[type="text/x-thumbs-test"]')
+   var firstClick = null;
+   var currentCode = null;
+   var eachTest = function (test) {
+     var link = document.createElement('a') 
+     link.innerHTML = test.getAttribute('data-name')
+     link.style.padding = "10px"
+     var id = test.id
+     var jsVersion = document.querySelector("#" + id + "_js")
+     
+     link.href = "#"
+     var theOnclick = function () { 
+       currentCode = test.innerHTML.substring(1)
+       thumbsCode.innerHTML = currentCode;
+       jsCode.innerHTML = jsVersion.innerHTML.substring(1)
+       return false;
+     }
+     if (!firstClick) {
+       firstClick = theOnclick 
+     }
+     link.onclick = theOnclick 
+     link.style.display = "block"
+     menu.appendChild(link)
+   }
+   for (var i=0; i < tests.length; i++) {
+     eachTest(tests[i])   
+   }
+   firstClick()
+   var runButton = document.querySelector("#run")
+   runButton.onclick = function () {
+     Thumbs.run(currentCode)
+   }
+ }
+console.log("got here")
+</script>
 
 <script type="text/x-thumbs-test" id="function" data-name="A function">
 sayHi * name
@@ -96,7 +150,13 @@ Alert $
 
 </script>
 
-<script type="text/x-thumbs" id="tests">
+<script type="text/thumbs" id="tests">
+Say $ got to thumbs
+Start
+theConcat * a theB
+  $ $a $theB
+ret CallThisFunc theConcat
+Eq ret $ hello world
 
 nullFunc *
 b Add NullFunc
@@ -129,10 +189,7 @@ Eq multiline $
   more2
 
 
-theConcat * a theB
-  $ $a $theB
-ret CallThisFunc theConcat
-Eq ret $ hello world
+
 
 ret Plow
 Eq ret $ king
@@ -621,63 +678,8 @@ answer Add 7 5
 </style>
 
 
-<script>
- var start = function () {
-   Thumbs.addScope({
-     newsay: function (word, word2) {
-       return "saying: " + word + " " + word2
-     },
-     callThisFunc: function (fn) {
-       return fn("hello", "world") 
-     },
-     find: function (selector) {
-       return document.querySelector(selector)
-     },
-     creatEl: function (what) {
-       return document.createElement(what) 
-     } 
-     })
-   Thumbs.runScriptTags()
-   var thumbsCode = document.querySelector("#thumbs_code")
-   var jsCode = document.querySelector("#js_code")
-   var menu = document.querySelector("#menu")
-   var tests = document.querySelectorAll('[type="text/x-thumbs-test"]')
-   var firstClick = null;
-   var currentCode = null;
-   var eachTest = function (test) {
-     var link = document.createElement('a') 
-     link.innerHTML = test.getAttribute('data-name')
-     link.style.padding = "10px"
-     var id = test.id
-     var jsVersion = document.querySelector("#" + id + "_js")
-     
-     link.href = "#"
-     var theOnclick = function () { 
-       currentCode = test.innerHTML.substring(1)
-       thumbsCode.innerHTML = currentCode;
-       jsCode.innerHTML = jsVersion.innerHTML.substring(1)
-       return false;
-     }
-     if (!firstClick) {
-       firstClick = theOnclick 
-     }
-     link.onclick = theOnclick 
-     link.style.display = "block"
-     menu.appendChild(link)
-   }
-   for (var i=0; i < tests.length; i++) {
-     eachTest(tests[i])   
-   }
-   firstClick()
-   var runButton = document.querySelector("#run")
-   runButton.onclick = function () {
-     Thumbs.run(currentCode)
-   }
- }
-
-</script>
 </head>
-<body onload="start()">
+<body onload="">
 <h1>Thumbs</h1>
 <div>A programming language for your thumbs.
   

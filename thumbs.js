@@ -146,10 +146,7 @@
     },
     load: function (key) {
       return localStorage[key]
-    }, onFlickr: function (fn) {
-      window.jsonFlickrApi = fn 
-    },
-    //TODO: write a thumbs version as well
+    },//TODO: write a thumbs version as well
     loop: function (items, fn) {
       for (var i = 0; i < items.length; i++) {
         var item = items[i]
@@ -594,26 +591,22 @@
       return name
     }
     
-    try {
-      if (name.charAt && name.charAt(0) == "$") {
-        return name.substring(1) 
-      } else if (name - 0 == name && !opts.inChain) { //wierd
-        return name - 0
-      }
-
-      var names = name.split(/\.|\:/)
-      if (names.length > 1) {
-        var symbols = name.match(/\.|\:/g)
-        symbols.unshift(".")
-        return chainGet(names, symbols, lookupScope, lookupScope)
-      }
-
-      var oldName = opts.oldName || name.charAt(0).toLowerCase() + name.slice(1)
-      opts.oldName = oldName
-      name = name.toLowerCase()
-    } catch (e) {
-      var b = 1; 
+    if (name.charAt && name.charAt(0) == "$") {
+      return name.substring(1) 
+    } else if (name - 0 == name && !opts.inChain) { //wierd
+      return name - 0
     }
+
+    var names = name.split(/\.|\:/)
+    if (names.length > 1) {
+      var symbols = name.match(/\.|\:/g)
+      symbols.unshift(".")
+      return chainGet(names, symbols, lookupScope, lookupScope)
+    }
+
+    var oldName = opts.oldName || name.charAt(0).toLowerCase() + name.slice(1)
+    opts.oldName = oldName
+    name = name.toLowerCase()
 
     
     if (lookupScope.type == "fn") {
@@ -762,7 +755,7 @@
     runParsed(parsed);
   }
 
-  var runScriptTags = function () {
+  var runScripts = function () {
     var codes = document.querySelectorAll('[type="text/x-thumbs"]')
     for (var i = 0; i < codes.length; i++) {
       var code = codes[i].innerHTML.slice(1)
@@ -785,10 +778,69 @@
     }  
   }
 
-  Thumbs.runScriptTags = runScriptTags
+  Thumbs.runScripts = runScripts
   Thumbs.run = run //runs raw code
   Thumbs.runFile = runFile
   Thumbs.addScope = addScope
+
+//borrowed from
+//https://raw.github.com/jashkenas/coffee-script/master/src/browser.coffee
+
+if (typeof window === "undefined" || window === null) return;
+
+Thumbs.load = function(url, callback) {
+  var xhr;
+  xhr = new (window.ActiveXObject || XMLHttpRequest)('Microsoft.XMLHTTP');
+  xhr.open('GET', url, true);
+  if ('overrideMimeType' in xhr) xhr.overrideMimeType('text/plain');
+  xhr.onreadystatechange = function() {
+    var _ref;
+    if (xhr.readyState === 4) {
+      if ((_ref = xhr.status) === 0 || _ref === 200) {
+        Thumbs.run(xhr.responseText, url);
+      } else {
+        throw new Error("Could not load " + url);
+      }
+      if (callback) return callback();
+    }
+  };
+  return xhr.send(null);
+};
+
+var runScripts = function() {
+  var thumbses, execute, index, length, s, scripts;
+  scripts = document.getElementsByTagName('script');
+  thumbses = (function() {
+    var _i, _len, _results;
+    _results = [];
+    for (_i = 0, _len = scripts.length; _i < _len; _i++) {
+      s = scripts[_i];
+      if (s.type === 'text/thumbs') _results.push(s);
+    }
+    return _results;
+  })();
+  index = 0;
+  length = thumbses.length;
+  (execute = function() {
+    var script;
+    script = thumbses[index++];
+    if ((script != null ? script.type : void 0) === 'text/thumbs') {
+      if (script.src) {
+        return Thumbs.load(script.src, execute);
+      } else {
+        Thumbs.run(script.innerHTML.slice(1), "scripttag" + (index - 1));
+        return execute();
+      }
+    }
+  })();
+  return null;
+};
+
+if (window.addEventListener) {
+  addEventListener('DOMContentLoaded', runScripts, false);
+} else {
+  attachEvent('onload', runScripts);
+}
+})();
  
 
-})();
