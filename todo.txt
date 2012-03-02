@@ -43,9 +43,11 @@ write a simle loop function
 
 write more tests with javascript interaction
 double nested multi line string
-spaces on multi line strings are messed up (when indenting one space)
+spaces on multi line strings are messed up (when indenting not a multiple of 2 space)
 
 one line hash: person # name $drew age 27
 
-
 calling js functions only works if they are lowercase!
+
+return early from a parent function, like in an if statement
+

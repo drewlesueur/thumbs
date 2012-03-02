@@ -169,17 +169,20 @@
     slice: function (jsarr, a, b) {
       return jsarr.slice(a, b)
     },
-    convertToJSON: function (arg) {
+    converttojson: function (arg) {
       return JSON.stringify(arg) 
     },
-    convertFromJSON: function (arg) {
+    convertfromjson: function (arg) {
       return JSON.parse(arg)                  
     },
-    while: function (cond, something) {
+    "while": function (cond, something) {
       while (cond()) {
         something() 
       } 
-    }
+    },
+    "length": function (str) { return str.length;},
+    "lessthan": function (a, b) { return a < b;},
+    "greaterthan": function (a, b) { return a > b;}
     // end todo
   }  
 
@@ -402,28 +405,17 @@
 
   var convertArgs = function (argsIndex, args, newScope, fn, rest, nestedArgs, currentScope, opts ) {
     var foundInnerObject = false;
-    //TODO: optimize this because the fn calling this one has already com
-    //combined second and rest 
-    
-    if (rest.length) {
-      var second = rest[0]
-      var rest = rest.slice(1)
-      if (second && second.match && second.match(/^[A-Z]/)) {
-        var ret = callFunction(second, rest[0], rest.slice(1), nestedArgs, currentScope)
-        if (ret && (isString(ret) || ret.toString().match(/^\d/))) { //TODO: or is number!!!!!
-          ret = "$" + ret 
-        } // todo: i don't like this way. Do I need extra level of indirection for strings
-        var rest = [ret];
-      } else {
-        var rest = [second].concat(__slice.call(rest))
-      }
-    }
 
     for (var i = 0; i < rest.length; i++) {
       var varName = rest[i]
       if (isStartSymbol(varName)) { //should I be doing this?
         var theRest = rest.slice(i+1)
         var argValue = generateValue(varName, theRest, nestedArgs, currentScope)
+        foundInnerObject = true;
+      } else if (isFuncCall(varName)) { //should I be doing this?
+        var theRest = rest.slice(i+1)
+        var ret = callFunction(varName, theRest[0], theRest.slice(1), nestedArgs, currentScope)
+        argValue = ret
         foundInnerObject = true;
       }
       if (fn.args) {
@@ -439,7 +431,6 @@
       if (foundInnerObject) {
         argsIndex += 1
         break;
-        
       }
       
     } 
@@ -574,7 +565,10 @@
   }
   
   var isStartSymbol = function (thing) {
-    return thing && thing.match && thing.match(/^[\*|\#|\$|\+|\>]$/) 
+    return thing && thing.match && thing.match(/(^[\*\#\$\+\>]$)/) 
+  } 
+  var isFuncCall = function (thing) {
+    return thing && thing.match && thing.match(/^[A-Z]/) 
   } 
   var callFunction = function (first, second, rest, nestedArgs, currentScope) {
     var fn = get(first/*.toLowerCase()*/, currentScope) 
@@ -814,6 +808,7 @@
 
 if (typeof window === "undefined" || window === null) return;
 
+
 Thumbs.load = function(url, callback) {
   var xhr;
   xhr = new (window.ActiveXObject || XMLHttpRequest)('Microsoft.XMLHTTP');
@@ -862,8 +857,14 @@ var runScripts = function() {
   return null;
 };
 
+var handleError = function () {
+  throw new Error("error on line " + lineNumber + ": " + originalLines[lineNumber])
+  return true
+}
+
 if (window.addEventListener) {
   addEventListener('DOMContentLoaded', runScripts, false);
+  addEventListener('error', handleError)
 } else {
   attachEvent('onload', runScripts);
 }

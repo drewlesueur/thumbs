@@ -66,7 +66,6 @@ Alert $ Hello World
      Thumbs.run(currentCode)
    }
  }
-console.log("got here")
 </script>
 
 <script type="text/x-thumbs-test" id="function" data-name="A function">
@@ -155,12 +154,27 @@ Alert $
   var getName = function (map) {
     return map.name;
   }
-
+  var spaceAtEnd = "yo ";
 </script>
 
 <script type="text/thumbs" id="tests">
-Say $ got to thumbs
 Start
+
+getNumber > 7
+Eq 7 GetNumber
+
+Eq true LessThan 1 10
+Eq false LessThan 10 1
+Eq true GreaterThan 10 1
+Eq false GreaterThan 1 10
+
+Eq 1 jsObj.a
+JsObj.go
+Eq 2 jsObj.a
+
+Eq spaceAtEnd $ yo 
+
+
 
 count 0
 
@@ -208,7 +222,9 @@ multiline $
     more
     300
   non indents
-  more
+  more2
+
+Say ConvertToJSON multiline
 
 Eq multiline $ 
   multi line with
@@ -239,9 +255,6 @@ fakeButton.onclick * a
 value TriggerOnclick
 Eq value 11
 
-Eq 1 JsObj.a
-JsObj.go
-Eq 2 JsObj.a
 
 
 TakeFunc * a b
@@ -265,9 +278,6 @@ ret JsObj.smile
 Eq ret 100
 
 
-getNumber > 7
-$ todo!
-$ Eq 14 GetNumber
 
 Eq rombus $ 4 equal sides
 Eq rectangles.1 $square
@@ -293,15 +303,11 @@ coolified coolify.phones
 Eq coolified $ phones cool!
 
 
-
-
-
 myWord $square
 Eq coolify:myWord $ square cool!
 
 countries + $chile $mexico $colombia $usa
 Eq countries.0 $chile
-Say countries.2
 
 a 1
 b 2
@@ -373,7 +379,6 @@ getCookie2 *
 myCookie2 GetCookie2
 Eq myCookie2 $ cookie!
 
-Say myCookie2
 
 $ one line function
 getCookie > $ cookie!
@@ -480,12 +485,6 @@ c Inc2
 Eq a 12
 Eq b 14
 Eq c 16
-
-$ multiline strings
-multiliner $
-  My name is Drew!
-  This should be multi line
-Say multiliner
 
 $ interpolation of strings
 name $ Drew LeSueur
@@ -611,9 +610,6 @@ t ArgTest4
   $h $e $l
   $l $o
 Eq t $ h e l l o
-
-
-Saying $ almost done
 
 Say $ all done
 
