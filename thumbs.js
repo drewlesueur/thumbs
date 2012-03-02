@@ -449,7 +449,10 @@
   // should I treat them like functions?
   // or should I just try to convert to js object
   var doConverting = function (arg, currentScope) {
-    if (arg && arg.type == "fn") {
+    if (arg && (arg.type == "map" || arg.type == "ls")) {
+      //TODO: warning not recursive
+      return arg.body
+    } else if (arg && arg.type == "fn") {
       var rest = []; // for now
       var nestedArgs = []; //
       var compiledFunction = compileFunction(arg, rest, nestedArgs, currentScope) 

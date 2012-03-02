@@ -22,6 +22,7 @@ maybe a % operator that allows you to do
 
 Convert js args to thumbs args
   arrays and objects --> thumbs lists and maps
+  do it recursively
 
 convert thumbs args to js args for lists and maps
 

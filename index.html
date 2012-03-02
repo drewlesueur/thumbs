@@ -148,11 +148,34 @@ Alert $
     return "yo quiero verla" 
   }
 
+  var thirdIndex = function (list) {
+    return list[2];
+  }
+
+  var getName = function (map) {
+    return map.name;
+  }
+
 </script>
 
 <script type="text/thumbs" id="tests">
 Say $ got to thumbs
 Start
+
+
+a + 1 2 5
+theThird ThirdIndex a
+Eq theThird 5
+
+b #
+  name $drew
+  age 27
+
+name GetName b
+Eq name $drew
+
+
+
 theConcat * a theB
   $ $a $theB
 ret CallThisFunc theConcat
