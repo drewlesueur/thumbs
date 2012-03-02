@@ -133,6 +133,15 @@
     neg: function (a) {
       return -a 
     },
+    not: function (a) {
+      return !a;
+    },
+    or: function (a, b) {
+      return a || b;
+    },
+    and: function (a, b) {
+      return a && b;
+    },
     //TODO: test these functions  
     replace: function (str, what, what2) {
      return str.replace(what, what2)
