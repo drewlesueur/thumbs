@@ -168,7 +168,18 @@
     //TODO: write a thumbs version as well
     slice: function (jsarr, a, b) {
       return jsarr.slice(a, b)
-    } 
+    },
+    convertToJSON: function (arg) {
+      return JSON.stringify(arg) 
+    },
+    convertFromJSON: function (arg) {
+      return JSON.parse(arg)                  
+    },
+    while: function (cond, something) {
+      while (cond()) {
+        something() 
+      } 
+    }
     // end todo
   }  
 
@@ -485,7 +496,10 @@
     //TODO: some of this compiling could be done when it
     //first parses?
     // or cache some of this stuff here
-
+    if (!fn) {
+      console.log("function doesn't exist on line " + lineNumber)
+      console.log(originalLines[lineNumber])
+    }
     var newScope = {
       body: {},
       parentScope: fn.scope //js func wont have scope but oh well

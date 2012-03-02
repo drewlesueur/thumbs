@@ -162,6 +162,13 @@ Alert $
 Say $ got to thumbs
 Start
 
+count 0
+
+While
+  > Not Is count 3
+  > count Add 1 count
+Eq count 3
+
 
 a + 1 2 5
 theThird ThirdIndex a
