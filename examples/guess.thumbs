@@ -1,1 +1,12 @@
-$
+guessandcheck *
+  x 5847
+  g Prompt $ Guess the #⃣
+  Is g x
+    > Alert $👌
+    *
+      If 
+        > Lessthan g x
+        > Alert $👆
+        > Alert $👇
+      Guessandcheck
+Guessandcheck
