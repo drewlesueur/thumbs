@@ -1,0 +1,7 @@
+#!/usr/bin/env node
+
+Thumbs = require("./thumbs.js")
+Thumbs.addScope({
+  require: require || function () {}
+})
+Thumbs.runFile(process.argv[2])

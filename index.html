@@ -14,6 +14,59 @@ Alert $ Hello World
 <script type="text/plain" id="hello_world_js" data-name="Hello world js">
   alert("Hello world");
 </script>
+<script>
+ var start = function () {
+   Thumbs.addScope({
+     newsay: function (word, word2) {
+       return "saying: " + word + " " + word2
+     },
+     callThisFunc: function (fn) {
+       return fn("hello", "world") 
+     },
+     find: function (selector) {
+       return document.querySelector(selector)
+     },
+     creatEl: function (what) {
+       return document.createElement(what) 
+     } 
+   })
+   var thumbsCode = document.querySelector("#thumbs_code")
+   var jsCode = document.querySelector("#js_code")
+   var menu = document.querySelector("#menu")
+   var tests = document.querySelectorAll('[type="text/x-thumbs-test"]')
+   var firstClick = null;
+   var currentCode = null;
+   var eachTest = function (test) {
+     var link = document.createElement('a') 
+     link.innerHTML = test.getAttribute('data-name')
+     link.style.padding = "10px"
+     var id = test.id
+     var jsVersion = document.querySelector("#" + id + "_js")
+     
+     link.href = "#"
+     var theOnclick = function () { 
+       currentCode = test.innerHTML.substring(1)
+       thumbsCode.innerHTML = currentCode;
+       jsCode.innerHTML = jsVersion.innerHTML.substring(1)
+       return false;
+     }
+     if (!firstClick) {
+       firstClick = theOnclick 
+     }
+     link.onclick = theOnclick 
+     link.style.display = "block"
+     menu.appendChild(link)
+   }
+   for (var i=0; i < tests.length; i++) {
+     eachTest(tests[i])   
+   }
+   firstClick()
+   var runButton = document.querySelector("#run")
+   runButton.onclick = function () {
+     Thumbs.run(currentCode)
+   }
+ }
+</script>
 
 <script type="text/x-thumbs-test" id="function" data-name="A function">
 sayHi * name
@@ -63,9 +116,180 @@ Alert $
     a + " " + b + " " + c)
 </script>
 
+<script>
+  var rombus = "4 equal sides"
+  var rectangles = ["golden", "square", "long"]
+  var qs = document.querySelector
+  var jsObj = {a:1, smile: function () {return 100}, go: function () {this.a = 2}}
+  var plow = function () {return "king"}
+  
+  //var name must be lower case
+  var otherObj = {
+    add1: function (x) { return x - 0 + 1 },
+    add2: function (x) {return x - 0 + 2},
+    numb: 3
+  } 
+
+  var eat = function (a) {
+    return a.substring(1) 
+  }
+
+  var takeFunc = function (fn) {
+    return fn(1,2,3) 
+  } 
+
+  var fakeButton = {}
+  var triggerOnclick = function () {
+    return fakeButton.onclick(1) 
+  }
+
+  var crazyFunction = function () {
+    return "yo quiero verla" 
+  }
+
+  var thirdIndex = function (list) {
+    return list[2];
+  }
+
+  var getName = function (map) {
+    return map.name;
+  }
+  var spaceAtEnd = "yo ";
+</script>
+
+<script type="text/thumbs" id="tests">
+Start
+
+getNumber > 7
+Eq 7 GetNumber
+
+Eq true LessThan 1 10
+Eq false LessThan 10 1
+Eq true GreaterThan 10 1
+Eq false GreaterThan 1 10
+
+Eq 1 jsObj.a
+JsObj.go
+Eq 2 jsObj.a
+
+Eq spaceAtEnd $ yo 
 
 
-<script type="text/x-thumbs" id="tests">
+
+count 0
+
+While
+  > Not Is count 3
+  > count Add 1 count
+Eq count 3
+
+
+a + 1 2 5
+theThird ThirdIndex a
+Eq theThird 5
+
+b #
+  name $drew
+  age 27
+
+name GetName b
+Eq name $drew
+
+
+
+theConcat * a theB
+  $ $a $theB
+ret CallThisFunc theConcat
+Eq ret $ hello world
+
+nullFunc *
+b Add NullFunc
+$ the above shouldnt throw an error
+
+myFunc *
+  CrazyFunction
+
+phrase MyFunc
+Eq phrase $ yo quiero verla
+
+str $
+  a
+  b
+
+multiline $
+  multi line with
+    indents
+    more
+    300
+  non indents
+  more2
+
+Say ConvertToJSON multiline
+
+Eq multiline $ 
+  multi line with
+    indents
+    more
+    300
+  non indents
+  more2
+
+
+
+
+ret Plow
+Eq ret $ king
+
+numb OtherObj.add2 3
+Eq numb 5
+
+numb OtherObj.add1 OtherObj.add2 3
+Eq numb 6
+
+numb OtherObj.add1 OtherObj.add2 otherObj.numb
+Eq numb 6
+
+fakeButton.onclick * a
+  Add a 10 
+
+value TriggerOnclick
+Eq value 11
+
+
+
+TakeFunc * a b
+  Add a b
+
+
+smaller Eat $ word
+Eq smaller $ord
+
+name $drew
+sentance $ my name is drew.
+sentance2 $ my name is $name.
+Eq sentance sentance2
+
+
+body document.body
+$ body.onclick > Alert $clicked
+
+a someFun
+ret JsObj.smile
+Eq ret 100
+
+
+
+Eq rombus $ 4 equal sides
+Eq rectangles.1 $square
+
+
+times2 * numb
+  Mult numb 2
+
+myNumber Times2 GetNumber
+Eq myNumber 14
+
+
 coolify * word
   $ $word cool!
 
@@ -79,15 +303,11 @@ coolified coolify.phones
 Eq coolified $ phones cool!
 
 
-
-
-
 myWord $square
 Eq coolify:myWord $ square cool!
 
 countries + $chile $mexico $colombia $usa
 Eq countries.0 $chile
-Say countries.2
 
 a 1
 b 2
@@ -159,7 +379,6 @@ getCookie2 *
 myCookie2 GetCookie2
 Eq myCookie2 $ cookie!
 
-Say myCookie2
 
 $ one line function
 getCookie > $ cookie!
@@ -167,10 +386,6 @@ myCookie GetCookie
 Eq myCookie $ cookie!
 
 
-theConcat * a theB
-  $ $a $theB
-ret CallThisFunc theConcat
-Eq ret $ hello world
 
 said NewSay $yo $world
 Eq said $ saying: yo world
@@ -271,12 +486,6 @@ Eq a 12
 Eq b 14
 Eq c 16
 
-$ multiline strings
-multiliner $
-  My name is Drew!
-  This should be multi line
-Say multiliner
-
 $ interpolation of strings
 name $ Drew LeSueur
 age 27
@@ -348,7 +557,9 @@ sheep DoThisThing2 90 9 * c d
 Eq sheep 99
 
 sendText * text
-  ret $ a text was sent to $text.to from $text.from
+  to text.to
+  from text.from
+  ret $ a text was sent to $to from $from
 
 status SendText #
   from $drew
@@ -399,9 +610,6 @@ t ArgTest4
   $h $e $l
   $l $o
 Eq t $ h e l l o
-
-
-Saying $ almost done
 
 Say $ all done
 
@@ -496,63 +704,8 @@ answer Add 7 5
 </style>
 
 
-<script>
- var start = function () {
-   Thumbs.addScope({
-     newsay: function (word, word2) {
-       return "saying: " + word + " " + word2
-     },
-     callThisFunc: function (fn) {
-       return fn("hello", "world") 
-     },
-     find: function (selector) {
-       return document.querySelector(selector)
-     },
-     creatEl: function (what) {
-       return document.createElement(what) 
-     } 
-     })
-   Thumbs.runScriptTags()
-   var thumbsCode = document.querySelector("#thumbs_code")
-   var jsCode = document.querySelector("#js_code")
-   var menu = document.querySelector("#menu")
-   var tests = document.querySelectorAll('[type="text/x-thumbs-test"]')
-   var firstClick = null;
-   var currentCode = null;
-   var eachTest = function (test) {
-     var link = document.createElement('a') 
-     link.innerHTML = test.getAttribute('data-name')
-     link.style.padding = "10px"
-     var id = test.id
-     var jsVersion = document.querySelector("#" + id + "_js")
-     
-     link.href = "#"
-     var theOnclick = function () { 
-       currentCode = test.innerHTML.substring(1)
-       thumbsCode.innerHTML = currentCode;
-       jsCode.innerHTML = jsVersion.innerHTML.substring(1)
-       return false;
-     }
-     if (!firstClick) {
-       firstClick = theOnclick 
-     }
-     link.onclick = theOnclick 
-     link.style.display = "block"
-     menu.appendChild(link)
-   }
-   for (var i=0; i < tests.length; i++) {
-     eachTest(tests[i])   
-   }
-   firstClick()
-   var runButton = document.querySelector("#run")
-   runButton.onclick = function () {
-     Thumbs.run(currentCode)
-   }
- }
-
-</script>
 </head>
-<body onload="start()">
+<body onload="">
 <h1>Thumbs</h1>
 <div>A programming language for your thumbs.
   

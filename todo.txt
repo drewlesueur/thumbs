@@ -22,6 +22,7 @@ maybe a % operator that allows you to do
 
 Convert js args to thumbs args
   arrays and objects --> thumbs lists and maps
+  do it recursively
 
 convert thumbs args to js args for lists and maps
 
@@ -38,3 +39,15 @@ more library calls (use @caolan's async.js)
 an async library like async.js also using andThen, or where callback is added to scope
 
 write a simle loop function
+
+
+write more tests with javascript interaction
+double nested multi line string
+spaces on multi line strings are messed up (when indenting not a multiple of 2 space)
+
+one line hash: person # name $drew age 27
+
+calling js functions only works if they are lowercase!
+
+return early from a parent function, like in an if statement
+

@@ -3,8 +3,10 @@
  var Thumbs;
   if (typeof exports !== 'undefined') {
     Thumbs = exports;
+    Thumbs.global = global
   } else {
     Thumbs = root.Thumbs = {};
+    Thumbs.global = window
   }
 
   var splitText = function (text) {
@@ -119,17 +121,69 @@
     "add": function () {
       var sum = 0;
       for (var i = 0; i < arguments.length; i++)
-        sum += arguments[i] 
+        sum += arguments[i] - 0
       return sum;
     },
     eq: function (a, b) {
       if (a != b) {
         console.log(a + " isn't " + b + " on line " + lineNumber) 
+        console.log(originalLines[lineNumber])
       }  
     },
     neg: function (a) {
       return -a 
-    }
+    },
+    not: function (a) {
+      return !a;
+    },
+    or: function (a, b) {
+      return a || b;
+    },
+    and: function (a, b) {
+      return a && b;
+    },
+    //TODO: test these functions  
+    replace: function (str, what, what2) {
+     return str.replace(what, what2)
+    },
+    split: function (str, str3) {
+      return str.split(str2)
+    },
+    empty: "",
+    save: function (key, val) {
+      return localStorage[key] = val
+    },
+    load: function (key) {
+      return localStorage[key]
+    },//TODO: write a thumbs version as well
+    loop: function (items, fn) {
+      for (var i = 0; i < items.length; i++) {
+        var item = items[i]
+        fn(item, i)
+      } 
+    },
+    concat: function (a, b, c) {
+      return a + b + c; //todo: use var args
+    },
+    //TODO: write a thumbs version as well
+    slice: function (jsarr, a, b) {
+      return jsarr.slice(a, b)
+    },
+    converttojson: function (arg) {
+      return JSON.stringify(arg) 
+    },
+    convertfromjson: function (arg) {
+      return JSON.parse(arg)                  
+    },
+    "while": function (cond, something) {
+      while (cond()) {
+        something() 
+      } 
+    },
+    "length": function (str) { return str.length;},
+    "lessthan": function (a, b) { return a < b;},
+    "greaterthan": function (a, b) { return a > b;}
+    // end todo
   }  
 
   var scope = {
@@ -151,6 +205,10 @@
   var isObject = function (obj) {
     return obj === Object(obj);
   }
+  var isArray = function(obj) { //todo: use native if available like underscore.js
+    return toString.call(obj) == '[object Array]';
+  };
+
   var isString = function(obj) {
     return toString.call(obj) == '[object String]';
   };
@@ -175,14 +233,22 @@
     };
   };
 
+  var convertStringNestedArgsToString = function (nestedArgs) {
+    for (var i = 0; i < nestedArgs.length; i++) {
+      if (nestedArgs[i][0] - 0 == nestedArgs[i][0] - 0) {
+        nestedArgs[i] = nestedArgs[i].slice(1).join(" ") //slice to remove line number
+      } else {
+        convertStringNestedArgsToString(nestedArgs[i])
+        nestedArgs[i] = nestedArgs[i].join("\n  ") //slice to remove line number
+      }
+    } 
+  }
 
   var setString = function (rest, nestedArgs, currentScope) {
-    for (var i = 0; i < nestedArgs.length; i++) {
-      nestedArgs[i] = nestedArgs[i].slice(1).join(" ") //slice to remove line number
-    } 
+    convertStringNestedArgsToString(nestedArgs)
     var value = rest.join(" ") 
     value += nestedArgs.join("\n")
-    value = value.replace(/\$([^\s]+)/g, function (whole, word) {
+    value = value.replace(/\$([\w]+)/g, function (whole, word) {
       return get(word, currentScope) 
     })
     return value;
@@ -307,7 +373,14 @@
     } else {
       var settingScope = findScopeWithName(name, currentScope)
     }
-    settingScope.body[name] =  value;
+    if (settingScope.body && "parentScope" in settingScope) {
+      settingScope.body[name] =  value;
+    } else { //todo: test this
+      if (value.type == "fn") {
+        value = doConverting(value, settingScope) 
+      }
+      settingScope[name] =  value;
+    }
     //todo make an option for always setting the current scope
     //like var is in javascript
     return value
@@ -332,28 +405,17 @@
 
   var convertArgs = function (argsIndex, args, newScope, fn, rest, nestedArgs, currentScope, opts ) {
     var foundInnerObject = false;
-    //TODO: optimize this because the fn calling this one has already com
-    //combined second and rest 
-    
-    if (rest.length) {
-      var second = rest[0]
-      var rest = rest.slice(1)
-      if (second && second.match && second.match(/^[A-Z]/)) {
-        var ret = callFunction(second, rest[0], rest.slice(1), nestedArgs, currentScope)
-        if (isString(ret)) {
-          ret = "$" + ret 
-        } // todo: i don't like this way. Do I need extra level of indirection for strings
-        var rest = [ret];
-      } else {
-        var rest = [second].concat(__slice.call(rest))
-      }
-    }
 
     for (var i = 0; i < rest.length; i++) {
       var varName = rest[i]
       if (isStartSymbol(varName)) { //should I be doing this?
         var theRest = rest.slice(i+1)
         var argValue = generateValue(varName, theRest, nestedArgs, currentScope)
+        foundInnerObject = true;
+      } else if (isFuncCall(varName)) { //should I be doing this?
+        var theRest = rest.slice(i+1)
+        var ret = callFunction(varName, theRest[0], theRest.slice(1), nestedArgs, currentScope)
+        argValue = ret
         foundInnerObject = true;
       }
       if (fn.args) {
@@ -369,7 +431,6 @@
       if (foundInnerObject) {
         argsIndex += 1
         break;
-        
       }
       
     } 
@@ -389,30 +450,36 @@
   //TODO: add objects, whats the best way? 
   // should I treat them like functions?
   // or should I just try to convert to js object
-  var convertThumbsArgsToJSArgs = function(args, currentScope) {
-    var doConverting = function (arg, i, args) {
-      if (arg && arg.type == "fn") {
-        var rest = []; // for now
-        var nestedArgs = []; //
-        var compiledFunction = compileFunction(arg, rest, nestedArgs, currentScope) 
-        args[i] = function () {
-          jsArgs = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-          var fnArgs = arg.args
-          var fnArg;
-          for (var j=0; j < jsArgs.length; j++) {
-            fnArg = fnArgs[j].toLowerCase()
-            if (fnArg) {
-              compiledFunction.scope.body[fnArg] = jsArgs[j]   
-            }
+  var doConverting = function (arg, currentScope) {
+    if (arg && (arg.type == "map" || arg.type == "ls")) {
+      //TODO: warning not recursive
+      return arg.body
+    } else if (arg && arg.type == "fn") {
+      var rest = []; // for now
+      var nestedArgs = []; //
+      var compiledFunction = compileFunction(arg, rest, nestedArgs, currentScope) 
+      var ret = function () {
+        jsArgs = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        var fnArgs = arg.args
+        var fnArg;
+        for (var j=0; j < jsArgs.length; j++) {
+          fnArg = fnArgs[j]
+          if (fnArg) {
+            fnArg = fnArg.toLowerCase()
+            compiledFunction.scope.body[fnArg] = jsArgs[j]   
           }
-          compiledFunction.scope.args = jsArgs
-          return callThumbsFunction(compiledFunction)  
         }
-      }   
-    }
+        compiledFunction.scope.args = jsArgs
+        return callThumbsFunction(compiledFunction)  
+      }
+      return ret
+    }   
+    return arg
+  }
+  var convertThumbsArgsToJSArgs = function(args, currentScope) {
     for (var i = 0; i < args.length; i++) {
       var arg = args[i]
-      doConverting(arg, i, args)
+      args[i] = doConverting(arg, currentScope)
     }  
   } 
 
@@ -420,7 +487,10 @@
     //TODO: some of this compiling could be done when it
     //first parses?
     // or cache some of this stuff here
-
+    if (!fn) {
+      console.log("function doesn't exist on line " + lineNumber)
+      console.log(originalLines[lineNumber])
+    }
     var newScope = {
       body: {},
       parentScope: fn.scope //js func wont have scope but oh well
@@ -495,10 +565,13 @@
   }
   
   var isStartSymbol = function (thing) {
-    return thing && thing.match && thing.match(/^[\*|\#|\$|\+|\>]$/) 
+    return thing && thing.match && thing.match(/(^[\*\#\$\+\>]$)/) 
+  } 
+  var isFuncCall = function (thing) {
+    return thing && thing.match && thing.match(/^[A-Z]/) 
   } 
   var callFunction = function (first, second, rest, nestedArgs, currentScope) {
-    var fn = get(first.toLowerCase(), currentScope) 
+    var fn = get(first/*.toLowerCase()*/, currentScope) 
     if (second) { 
       var rest = [second].concat(__slice.call(rest))
     }
@@ -538,15 +611,10 @@
       return name
     }
     
-    try {
-      if (name.charAt && name.charAt(0) == "$") {
-        return name.substring(1) 
-      } else if (name - 0 == name && !opts.inChain) { //wierd
-        return name - 0
-      }
-      name = name.toLowerCase()
-    } catch (e) {
-      var b = 1; 
+    if (name.charAt && name.charAt(0) == "$") {
+      return name.substring(1) 
+    } else if (name - 0 == name && !opts.inChain) { //wierd
+      return name - 0
     }
 
     var names = name.split(/\.|\:/)
@@ -555,14 +623,28 @@
       symbols.unshift(".")
       return chainGet(names, symbols, lookupScope, lookupScope)
     }
+
+    var oldName = opts.oldName || name.charAt(0).toLowerCase() + name.slice(1)
+    opts.oldName = oldName
+    name = name.toLowerCase()
+
     
     if (lookupScope.type == "fn") {
       var compiledFunction = compileFunction(lookupScope, ["$" + name], [], {}) //todo: no current scope?
       return callThumbsFunction(compiledFunction)  
-    } else if (name in lookupScope.body) { //todo: watch out for numerical keys vs string keys
+    } else if (lookupScope.body && name in lookupScope.body) { //todo: watch out for numerical keys vs string keys
       return lookupScope.body[name] 
     } else if (lookupScope.parentScope) {
-      return get(name, lookupScope.parentScope) 
+      return get(name, lookupScope.parentScope, opts) 
+    //TODO: detirmine better way to tell if its not a thumbs function than looking for "parentScope"
+    } else if (isArray(lookupScope) || (isObject(lookupScope) && !("parentScope" in lookupScope))) { //if its a js array or object
+      var ret = lookupScope[oldName]
+      if (isFunction(ret)) {
+        ret = __bind(ret, lookupScope)
+      }
+      return ret;
+    } else if (oldName in Thumbs.global) {
+      return Thumbs.global[oldName]
     } else {
       return null;
     }
@@ -693,7 +775,7 @@
     runParsed(parsed);
   }
 
-  var runScriptTags = function () {
+  var runScripts = function () {
     var codes = document.querySelectorAll('[type="text/x-thumbs"]')
     for (var i = 0; i < codes.length; i++) {
       var code = codes[i].innerHTML.slice(1)
@@ -716,12 +798,76 @@
     }  
   }
 
-  Thumbs.runScriptTags = runScriptTags
+  Thumbs.runScripts = runScripts
   Thumbs.run = run //runs raw code
   Thumbs.runFile = runFile
   Thumbs.addScope = addScope
- 
 
+//borrowed from
+//https://raw.github.com/jashkenas/coffee-script/master/src/browser.coffee
+
+if (typeof window === "undefined" || window === null) return;
+
+
+Thumbs.load = function(url, callback) {
+  var xhr;
+  xhr = new (window.ActiveXObject || XMLHttpRequest)('Microsoft.XMLHTTP');
+  xhr.open('GET', url, true);
+  if ('overrideMimeType' in xhr) xhr.overrideMimeType('text/plain');
+  xhr.onreadystatechange = function() {
+    var _ref;
+    if (xhr.readyState === 4) {
+      if ((_ref = xhr.status) === 0 || _ref === 200) {
+        Thumbs.run(xhr.responseText, url);
+      } else {
+        throw new Error("Could not load " + url);
+      }
+      if (callback) return callback();
+    }
+  };
+  return xhr.send(null);
+};
+
+var runScripts = function() {
+  var thumbses, execute, index, length, s, scripts;
+  scripts = document.getElementsByTagName('script');
+  thumbses = (function() {
+    var _i, _len, _results;
+    _results = [];
+    for (_i = 0, _len = scripts.length; _i < _len; _i++) {
+      s = scripts[_i];
+      if (s.type === 'text/thumbs') _results.push(s);
+    }
+    return _results;
+  })();
+  index = 0;
+  length = thumbses.length;
+  (execute = function() {
+    var script;
+    script = thumbses[index++];
+    if ((script != null ? script.type : void 0) === 'text/thumbs') {
+      if (script.src) {
+        return Thumbs.load(script.src, execute);
+      } else {
+        Thumbs.run(script.innerHTML.slice(1), "scripttag" + (index - 1));
+        return execute();
+      }
+    }
+  })();
+  return null;
+};
+
+var handleError = function () {
+  throw new Error("error on line " + lineNumber + ": " + originalLines[lineNumber])
+  return true
+}
+
+if (window.addEventListener) {
+  addEventListener('DOMContentLoaded', runScripts, false);
+  addEventListener('error', handleError)
+} else {
+  attachEvent('onload', runScripts);
+}
 })();
-
+ 
 
