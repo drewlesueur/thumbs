@@ -51,3 +51,13 @@ calling js functions only works if they are lowercase!
 
 return early from a parent function, like in an if statement
 
+ability to have comments
+
+
+maybe a > before letter turns that into a function
+like
+
+If
+  >Is x 1
+  >If
+    > Is x 2

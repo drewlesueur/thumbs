@@ -3,12 +3,13 @@
 <head>
 <script src="thumbs2.js"></script>
 <script src="thumbs-test.thumbs" type="text/thumbs"></script>
-<script type="text/thumbs-xx">
+<script type="text/thumbs">
 ;set $a 1
-;stop
+;assert a 1
+;say $runs_in_script_tag
 </script>
 <script type="text/playing">
-# inkmaker
+// inkmaker
 set $x 0
 fn $inc
 

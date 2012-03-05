@@ -262,7 +262,8 @@
     var fakeLineNumber = lineNumber //not sure this is the right line number
     rest.unshift(fakeLineNumber)
     nestedArgs.unshift(rest)
-    return setFunction([], nestedArgs, currentScope)
+    var fn = setFunction([], nestedArgs, currentScope)
+    return fn;
   }
   
 
@@ -275,11 +276,6 @@
     }
     return value
   }
-
-
- //   } else if (isStartSymbol(second)) {
- //     var theArg = generateValue(second, rest, nestedArgs)
-
 
   //TODO: add a unique id
   var setMap = function (nestedArgs, currentScope) {
@@ -578,7 +574,6 @@
     var compiledFunction = compileFunction(fn, rest, nestedArgs, currentScope) 
     return callThumbsFunction(compiledFunction)  
   }
-  
 
 
   var chainGet = function (names, symbols, lookupScope, originalScope) {
@@ -685,7 +680,8 @@
     //} else if (first.match(/^[a-z]/) && !second) {
     //  return get(first, currentScope)
     } else if (first.match(/^[A-Z]/)) {
-      return callFunction(first, second, rest, nestedArgs, currentScope)
+      var ret = callFunction(first, second, rest, nestedArgs, currentScope)
+      return ret
     }
   }
   

@@ -38,41 +38,58 @@ var instructionSet = {
     return killSignal;
   },
   assert: function (a, b) {
-    console.log(asserting)
     if (a != b) {
-      throw new Error(a + " doesn't equal " + b)
+      var line = files[lastFile][lastLine];
+      throw new Error(a + " doesn't equal " + b + " on line " + (lastLine + 1) + ": " + line)
+
     } 
+  },
+  say: function (what) {
+    console.log(what)  
+  },
+  call: function (func, outputVar, scope) {
+            
+  },
+  fn: function (line, name, scope) {
+      
   }
 }
 
-var compile = function (code) {
+lastFile = ""
+lastLine = 0
+files = {}
+
+var compile = function (code, filename) {
   var compiled = []
   //right now just going to compile the bytecode subset
   // that can be put into thumbs source
   var lines = code.split("\n");
+  files[filename] = lines;
   var line, words, first, func;
   for (var i = 0; i < lines.length; i++) {
     line = lines[i] 
-    if (line.charAt(0) == ";") {
+    var firstChar = line.charAt(0);
+    if (firstChar == ";") {
       words = line.split(" ");
       first = words[0].substring(1)
       words[0] = instructionSet[first];
-      compiled.push(words);
+      words.push(filename, i); //every instruction also has original file name and line
+      compiled.push(words)
+    } else if (firstChar == "/") {
+      continue 
     }
   }
   return compiled;
 }
 
-var run = function (code, name, scope) {
+var run = function (code, filename, scope) {
   scope = scope || globalScope
-  console.log("running code")
-  console.log(code)
-  bytecodes = compile(code);
-  console.log(bytecodes)
-  interpretBytecode(bytecodes, name, scope);
+  bytecodes = compile(code, filename);
+  interpretBytecode(bytecodes, scope);
 }
 
-var interpretBytecode = function (bytecodes, name, scope) {
+
+var interpretBytecode = function (bytecodes, scope) {
   var line, fn, args, ret;
   var scope = scope || globalScope
   for (var i=0; i<bytecodes.length; i++) {
@@ -81,17 +98,27 @@ var interpretBytecode = function (bytecodes, name, scope) {
     args = line.slice(1);
     var evaledArgs = [];
     var arg, evaledArg;
-    for (var argsIndex = 0; argsIndex < args.length; argsIndex++) {
+    //all but the last two, they are the file and the line number
+    var argsLength = args.length
+    for (var argsIndex = 0; argsIndex < argsLength - 2; argsIndex++) {
       arg = args[argsIndex]; 
       evaledArg = instructionSet.get(arg, scope);
       evaledArgs.push(evaledArg);
     }
+    //TODO: is there a better way
+    //to keep track of last file? maybe with regions?
+    lastFile = args[argsLength - 2]
+    lastLine = args[argsLength - 1]
+
     evaledArgs.push(scope);
-    evaledArgs.push([name, ]);
+    //evaledArgs.push([name, ]);
    
     ret = fn.apply(null, evaledArgs) //when implementing in other languages, you may have to pass in array of params
-    return ret;
+    if (ret == killSignal) {
+      break; 
+    }
   }
+  return ret
 }
 
 var runFile = function (file) {
