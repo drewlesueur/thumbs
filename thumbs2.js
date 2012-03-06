@@ -20,6 +20,7 @@ var globalScope = Thumbs.scope = {
 }
 
 var killSignal = "stooooooop!!!!!";
+var callStack = []
 var instructionSet = {
   set: function (a, b, scope) {
     scope[a] = b;
@@ -48,24 +49,43 @@ var instructionSet = {
     console.log(what)  
   },
   call: function (func, outputVar, scope) {
-            
+       
+  },
+  "return": function () {
+     
   },
   fn: function (line, name, scope) {
-      
-  }
+    scope[name] = [line, scope]  
+  },
+  goto: function () {}
 }
 
 lastFile = ""
 lastLine = 0
 files = {}
+labels = {} 
+labelChar = "["
 
-var compile = function (code, filename) {
+var assignLabels = function (lines, filename, scope) {
+  labels[filename] = {}
+  var filenameLabels = labels[filename]
+  for (var i = 0; i < lines.length; i++) {
+    line = lines[i];
+    if (line.charAt(0) == labelChar) {
+      var label = line.substring(1, line.length - 1)
+      filenameLabels[label] = i;
+    }
+  }
+}
+var compile = function (code, filename, scope) {
   var compiled = []
   //right now just going to compile the bytecode subset
   // that can be put into thumbs source
   var lines = code.split("\n");
   files[filename] = lines;
   var line, words, first, func;
+  //once throught getting all the labels
+  assignLabels(lines, filename, scope);
   for (var i = 0; i < lines.length; i++) {
     line = lines[i] 
     var firstChar = line.charAt(0);
@@ -73,6 +93,14 @@ var compile = function (code, filename) {
       words = line.split(" ");
       first = words[0].substring(1)
       words[0] = instructionSet[first];
+      for (var wordsIndex = 1; wordsIndex < words.length; wordsIndex++) {
+        var word = words[wordsIndex];
+        if (word.charAt(0) == labelChar) {
+          var label = word.substring(1, word.length - 1)
+          var labelValue = labels[filename][label];
+          words[wordsIndex] = labelValue;
+        } 
+      }
       words.push(filename, i); //every instruction also has original file name and line
       compiled.push(words)
     } else if (firstChar == "/") {
@@ -84,7 +112,7 @@ var compile = function (code, filename) {
 
 var run = function (code, filename, scope) {
   scope = scope || globalScope
-  bytecodes = compile(code, filename);
+  bytecodes = compile(code, filename, scope);
   interpretBytecode(bytecodes, scope);
 }
 
