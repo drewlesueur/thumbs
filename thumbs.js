@@ -83,6 +83,29 @@
     }
   }
 
+
+  // module system based of @creationix's https://gist.github.com/926811 
+  // and @dshaw's fork 
+
+  var dModule = {}
+  var defs = dModule.defs = {}
+  var modules = dModule.modules = {}
+  
+  dModule.define = function (name, fn) {
+    defs[name] = fn;
+    delete modules[name]; 
+  }
+
+  dModule.require = function (name) {
+    if (modules.hasOwnProperty(name)) return modules[name];
+    if (defs.hasOwnProperty(name)) {
+      var fn = defs[name];
+      defs[name] = function () { throw new Error("Circular Dependency"); }
+      return modules[name] = fn();
+    }
+    throw new Error("Module not found: " + name);
+  }
+
   var rawScope = {
     "in": function (time, f) {
       setTimeout(f, time)
@@ -182,7 +205,11 @@
     },
     "length": function (str) { return str.length;},
     "lessthan": function (a, b) { return a < b;},
-    "greaterthan": function (a, b) { return a > b;}
+    "greaterthan": function (a, b) { return a > b;},
+    "setmodule": dModule.define,
+    "getmodule": dModule.require
+
+
     // end todo
   }  
 
@@ -262,8 +289,7 @@
     var fakeLineNumber = lineNumber //not sure this is the right line number
     rest.unshift(fakeLineNumber)
     nestedArgs.unshift(rest)
-    var fn = setFunction([], nestedArgs, currentScope)
-    return fn;
+    return setFunction([], nestedArgs, currentScope)
   }
   
 
@@ -276,6 +302,11 @@
     }
     return value
   }
+
+
+ //   } else if (isStartSymbol(second)) {
+ //     var theArg = generateValue(second, rest, nestedArgs)
+
 
   //TODO: add a unique id
   var setMap = function (nestedArgs, currentScope) {
@@ -574,6 +605,7 @@
     var compiledFunction = compileFunction(fn, rest, nestedArgs, currentScope) 
     return callThumbsFunction(compiledFunction)  
   }
+  
 
 
   var chainGet = function (names, symbols, lookupScope, originalScope) {
@@ -680,8 +712,7 @@
     //} else if (first.match(/^[a-z]/) && !second) {
     //  return get(first, currentScope)
     } else if (first.match(/^[A-Z]/)) {
-      var ret = callFunction(first, second, rest, nestedArgs, currentScope)
-      return ret
+      return callFunction(first, second, rest, nestedArgs, currentScope)
     }
   }
   
@@ -866,4 +897,3 @@ if (window.addEventListener) {
 }
 })();
  
-
