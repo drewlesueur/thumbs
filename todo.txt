@@ -53,6 +53,14 @@ return early from a parent function, like in an if statement
 
 ability to have comments
 
+the equals sign that will call an argumentless function 
+and then return the result
+
+myLongVariableNameThatIsCool = myAnswer
+
+a do-like operator ?? maybe
+
+a bind operator ?? maybe
 
 maybe a > before letter turns that into a function
 like
