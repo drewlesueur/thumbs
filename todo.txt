@@ -17,7 +17,7 @@ change it so when you call a js function you also pass in scope
 maybe a % operator that allows you to do
   math equations
   like:
-  answer % -b + (sqrt(b^2 - 4*a*c)) / 2a
+  answer % -b + (sqrt(b^2 - 4*a*c)) / 2*a
   with parens, order of operations, everyting
 
 Convert js args to thumbs args
@@ -46,6 +46,13 @@ double nested multi line string
 spaces on multi line strings are messed up (when indenting not a multiple of 2 space)
 
 one line hash: person # name $drew age 27
+one line hash: person # name $drew age 27
+actually for all sets you should do that
+a 1 b 2
+That way a map is implemented like:
+  myMap CallAndReturnScope > a 1
+    b 2
+    c GetTheValueForC
 
 calling js functions only works if they are lowercase!
 
