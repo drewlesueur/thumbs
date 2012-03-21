@@ -8,6 +8,7 @@ You may need to convert nested calls out.
 Based on gotos.
 ****
 
+recursively convert thumbs objects to js objects when calling a js function
 splats
 add reference to caller scope
 ability to set parent on object to lookup
