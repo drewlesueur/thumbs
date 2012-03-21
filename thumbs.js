@@ -180,6 +180,7 @@
       return localStorage[key]
     },//TODO: write a thumbs version as well
     loop: function (items, fn) {
+      if (items.type == "ls") items = items.body;
       for (var i = 0; i < items.length; i++) {
         var item = items[i]
         fn(item, i)
@@ -484,8 +485,8 @@
     } else if (arg && arg.type == "fn") {
       var rest = []; // for now
       var nestedArgs = []; //
-      var compiledFunction = compileFunction(arg, rest, nestedArgs, currentScope) 
       var ret = function () {
+        var compiledFunction = compileFunction(arg, rest, nestedArgs, currentScope) 
         jsArgs = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
         var fnArgs = arg.args
         var fnArg;
@@ -556,6 +557,16 @@
       //var compiled = __bind(fn, null, args);
       var compiled = __bind.apply(null, [fn, null].concat(__slice.call(args)))
       // __bind fn, null, args... 
+    } else if (fn && fn.type == "map" || fn.type == "ls") {
+      if (args[1] === void(0)) {
+        return function () {
+          return get(args[0], fn)
+        }
+      } else {
+        return function () {
+          return set(args[0], args[1], fn) 
+        }
+      }
     } else {
       var compiled = {
         scope: newScope,
@@ -602,6 +613,14 @@
     if (second) { 
       var rest = [second].concat(__slice.call(rest))
     }
+    //if (fn && fn.type == "map" || fn.type == "ls") {
+    //  var third = rest[1]
+    //  if (third === void(0)) {
+    //    return get(get(second, currentScope), fn)  
+    //  } else {
+    //    return set(get(second, currentScope), third, fn) 
+    //  }
+    //}
     var compiledFunction = compileFunction(fn, rest, nestedArgs, currentScope) 
     return callThumbsFunction(compiledFunction)  
   }

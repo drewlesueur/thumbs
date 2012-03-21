@@ -160,7 +160,31 @@ Alert $
 <script type="text/thumbs" id="tests">
 Start
 
+stuff #
+Stuff $wow 1100
+Eq stuff.wow 1100
+one Stuff $wow
+Eq one 1100
 
+
+
+people + $tom $dale $bert
+peopleActions #
+eachPerson * person
+  PeopleActions person *
+    $ hello $person
+  $ my name is $person
+
+Loop people eachPerson
+Say peopleActions
+
+hiBert PeopleActions.bert
+hiDale PeopleActions.dale
+hiTom PeopleActions.tom
+
+Eq hiBert $ hello bert
+Eq hiDale $ hello dale
+Eq hiTom $ hello tom
 a 0
 If
   > a Add 1 2
