@@ -5,14 +5,24 @@
 ;assert [this_is_line_index_2] 2
 
 
-;fn [inkmaker] $incmaker
-;call inkmaker $inc
+;debugger
+;fn [incmaker] $incmaker
+;call incmaker $inc
+;stop
+;call inc $a
+;assert a 1
+;call inc $b
+;assert $b 2
+;call inc $b
+;call inc $b
+;assert $b 4
+
 ;stop
 
 // should not get to this assert
 ;assert 1 0
 
-[inkmaker]
+[incmaker]
 ;set $x 0
 ;fn [inc] $inc
 ;return

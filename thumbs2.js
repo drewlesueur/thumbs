@@ -38,18 +38,17 @@ var instructionSet = {
   stop: function () {
     return killSignal;
   },
-  assert: function (a, b) {
+  assert: function (a, b, scope) {
     if (a != b) {
       var line = files[lastFile][lastLine];
-      throw new Error(a + " doesn't equal " + b + " on line " + (lastLine + 1) + ": " + line)
-
+      throw new Error(a + " doesn't equal " + b + " on line " + (lastLine + 1) + "(bytecode "+(lastBytecodeLine + 1)+")" + ": \"" + line + "\" of \"" + lastFile + "\"")
     } 
   },
   say: function (what) {
     console.log(what)  
   },
   call: function (func, outputVar, scope) {
-       
+    console.log(func)    
   },
   "return": function () {
      
@@ -57,11 +56,13 @@ var instructionSet = {
   fn: function (line, name, scope) {
     scope[name] = [line, scope]  
   },
-  goto: function () {}
+  goto: function () {},
+  "debugger": function () {}
 }
 
 lastFile = ""
 lastLine = 0
+lastBytecodeLine = 0
 files = {}
 labels = {} 
 labelChar = "["
@@ -95,7 +96,7 @@ var compile = function (code, filename, scope) {
       words[0] = instructionSet[first];
       for (var wordsIndex = 1; wordsIndex < words.length; wordsIndex++) {
         var word = words[wordsIndex];
-        if (word.charAt(0) == labelChar) {
+        if (word.charAt(0) == labelChar) { //"["
           var label = word.substring(1, word.length - 1)
           var labelValue = labels[filename][label];
           words[wordsIndex] = labelValue;
@@ -116,18 +117,30 @@ var run = function (code, filename, scope) {
   interpretBytecode(bytecodes, scope);
 }
 
+var getLineStr = function () {
+  var line = files[lastFile][lastLine];
+  return line;
+}
 
 var interpretBytecode = function (bytecodes, scope) {
   var line, fn, args, ret;
   var scope = scope || globalScope
-  for (var i=0; i<bytecodes.length; i++) {
+  var i = 0;
+  var bytecodesLength = bytecodes.length
+  while (i < bytecodesLength) {
     line = bytecodes[i];
     fn = line[0]; 
     args = line.slice(1);
+    var argsLength = args.length
+    lastFile = args[argsLength - 2]
+    lastLine = args[argsLength - 1]
+    lastBytecodeLine = i
+    if (fn == instructionSet.debugger) {
+      debugger; 
+    }
     var evaledArgs = [];
     var arg, evaledArg;
     //all but the last two, they are the file and the line number
-    var argsLength = args.length
     for (var argsIndex = 0; argsIndex < argsLength - 2; argsIndex++) {
       arg = args[argsIndex]; 
       evaledArg = instructionSet.get(arg, scope);
@@ -135,8 +148,6 @@ var interpretBytecode = function (bytecodes, scope) {
     }
     //TODO: is there a better way
     //to keep track of last file? maybe with regions?
-    lastFile = args[argsLength - 2]
-    lastLine = args[argsLength - 1]
 
     evaledArgs.push(scope);
     //evaledArgs.push([name, ]);
@@ -145,6 +156,7 @@ var interpretBytecode = function (bytecodes, scope) {
     if (ret == killSignal) {
       break; 
     }
+    i += 1
   }
   return ret
 }
@@ -166,6 +178,7 @@ Thumbs.runScripts = runScripts
 Thumbs.run = run //runs raw code
 Thumbs.runFile = runFile
 Thumbs.addScope = addScope
+Thumbs.getLineStr = getLineStr
 
 //borrowed from
 //https://raw.github.com/jashkenas/coffee-script/master/src/browser.coffee
