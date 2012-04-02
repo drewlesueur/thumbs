@@ -349,7 +349,7 @@
 
   
   var generateValue = function (second, rest, nestedArgs, currentScope) {
-    if (second == "$") { //todo. do a faster way of converting to string //cache or something
+    if (isStringStart(second)) { //todo. do a faster way of converting to string //cache or something
       value = setString(rest, nestedArgs, currentScope)
     } else if (second == "+") {
       value = setList(rest, nestedArgs, currentScope)
@@ -359,7 +359,7 @@
       value = setOneLineFunction(rest, nestedArgs, currentScope)
     } else if ((second - 0) == second) {
       value = setNumber(second) 
-    } else if (second && second.match(/^[A-Z]/)) {
+    } else if (isFuncCall(second)) {
       value = setFuncCall(second, rest, nestedArgs, currentScope); 
     } else if (!second && nestedArgs.length) {
       value = setFunction(rest, nestedArgs, currentScope) 
@@ -416,7 +416,7 @@
   
   var callInRestIfNeeded = function (rest) {
     if (!rest[0]) return;
-    if (rest[0].match(/^[A-Z]/)) {
+    if (isFuncCall(rest[0])) {
         
     }
   } 
@@ -603,10 +603,13 @@
   }
   
   var isStartSymbol = function (thing) {
-    return thing && thing.match && thing.match(/(^[\*\#\$\+\>]$)/) 
+    return thing && thing.match && thing.match(/(^[\*\#\$\'\+\>]$)/) 
   } 
   var isFuncCall = function (thing) {
-    return thing && thing.match && thing.match(/^[A-Z]/) 
+    return (thing && thing.match && thing.match(/^[A-Z]/)) || (thing && thing.charAt && thing.charAt(thing.length - 1) == ".")
+  } 
+  var isStringStart = function (thing) {
+    return thing == "$" || thing == "'"
   } 
   var callFunction = function (first, second, rest, nestedArgs, currentScope) {
     var fn = get(first/*.toLowerCase()*/, currentScope) 
@@ -649,6 +652,7 @@
     opts = opts || {}
     lookupScope = lookupScope || currentScope;
 
+
     if (name == "0") {
       var a = 1 
     }
@@ -657,13 +661,17 @@
       return name
     }
     
-    if (name.charAt && name.charAt(0) == "$") {
+    if (name.charAt && isStringStart(name.charAt(0))) {
       return name.substring(1) 
     } else if (name - 0 == name && !opts.inChain) { //wierd
       return name - 0
     }
 
     var names = name.split(/\.|\:/)
+    if (names[names.length - 1] == "") { //remove the last dot for function calls
+      names.pop();
+      name = names[0]
+    }
     if (names.length > 1) {
       var symbols = name.match(/\.|\:/g)
       symbols.unshift(".")
@@ -720,18 +728,18 @@
     }
     if (first == "stop") {
       return stopSignal;
-    } if (first == "$") { //todo handle all the rest where it starts with a symbol
+    } if (isStringStart(first)) { //todo handle all the rest where it starts with a symbol
       var theRest = [second].concat(__slice.call(rest))
       var value = generateValue(first, theRest, nestedArgs, currentScope);
       return value;
+    } else if (isFuncCall(first)) { //first check funciton call
+      return callFunction(first, second, rest, nestedArgs, currentScope)
     } else if (first.match(/^[a-z]/)) {
       return setValue(first, second, rest, nestedArgs, currentScope, opts)
     } else if (first.match(/^\d/)) {
       return setValue(first, second, rest, nestedArgs, currentScope, opts)
     //} else if (first.match(/^[a-z]/) && !second) {
     //  return get(first, currentScope)
-    } else if (first.match(/^[A-Z]/)) {
-      return callFunction(first, second, rest, nestedArgs, currentScope)
     }
   }
   
@@ -785,39 +793,11 @@
   }
 
 
-  var addUI = function () {
-    var codeEl = document.createElement("div")
-    for (var i = 0; i < originalLines.length; i++) {
-      var lineEl = document.createElement('pre')   
-      lineEl.setAttribute("class", "line")
-      lineEl.setAttribute('data-line', i)
-      codeEl.appendChild(lineEl)
-      var line = originalLines[i]
-      line = line.replace(/^([\s]*)([a-z][\w]+)/, function (all, s, w) {
-        return s + "<span class='set'>" + w + '</span>'
-      })
-      line = line.replace(/^([\s]*)([A-Z][\w]*)/, function (all, s, w) {
-        return s + "<span class='call'>" + w + '</span>'
-      })
-      line = line.replace(/^([\s]*)([A-Z][\w]*)/, function (all, s, w) {
-        return s + "<span class='call'>" + w + '</span>'
-      })
-      line = line.replace(/^([\s]*)([\$].*)/, function (all, s, w) {
-        return s + "<span class='text'>" + w + '</span>'
-      })
-      line = line.replace(/[\$][^\s]+/, function (all, s, w) {
-        return "<span class='text'>" + all + '</span>'
-      })
-      lineEl.innerHTML = line
-       
-    }
-  }
 
   var run = function (code) {
     parsed = parse(code);
     originalLines = code.split("\n")
     parsed = parsed.slice(1)
-    //addUI(originalLines)
     runParsed(parsed);
   }
 
