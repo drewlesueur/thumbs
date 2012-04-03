@@ -204,6 +204,22 @@
         something() 
       } 
     },
+    "new": function () {
+      //http://stackoverflow.com/questions/3871731/dynamic-object-construction-in-javascript
+      var aClass = arguments[0]
+      var args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+      var fakeConstructor = function () {}
+      fakeConstructor.prototype = new aClass();
+      fakeThis = new fakeConstructor();
+      fakeThis.constructor = aClass;
+      newObj = aClass.apply(fakeThis, args);
+      
+      if (newObj !== null && (typeof newObj === "object" || typeof newObj === "function")) {
+          fakeThis = newObj;
+      }
+
+      return fakeThis;
+    },
     "length": function (str) { return str.length;},
     "lessthan": function (a, b) { return a < b;},
     "greaterthan": function (a, b) { return a > b;},

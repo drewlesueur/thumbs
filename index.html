@@ -155,9 +155,18 @@ Alert $
     return map.name;
   }
   var spaceAtEnd = "yo ";
+
+  animalClass = function (eyes, legs) {
+    this.eyes = eyes
+    this.legs = legs
+  }
 </script>
 
 <script type="text/thumbs" id="tests">
+
+myAnimal new. animalClass 2 4
+eq. myAnimal.eyes 2
+eq. myAnimal.legs 4
 
 person #
   run * 
@@ -165,6 +174,7 @@ person #
 
 phrase person.run. 
 eq. phrase ' the person is running
+
 
 sayHi * name
   ' hello $name
