@@ -670,7 +670,8 @@
     var names = name.split(/\.|\:/)
     if (names[names.length - 1] == "") { //remove the last dot for function calls
       names.pop();
-      name = names[0]
+      name = name.substr(name, name.length - 1)
+      //name = names[0]
     }
     if (names.length > 1) {
       var symbols = name.match(/\.|\:/g)
