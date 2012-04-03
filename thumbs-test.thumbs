@@ -4,8 +4,19 @@
 ;assert x 1
 ;assert [this_is_line_index_2] 2
 
+;fn [sayHi] $sayHi
+;call sayHi
 
-;debugger
+;stop
+[sayHi]
+;say $hi_dude 
+
+
+;set $x 0
+;fn [inc] $inc
+;return
+
+
 ;fn [incmaker] $incmaker
 ;call incmaker $inc
 ;stop

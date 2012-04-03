@@ -48,7 +48,11 @@ var instructionSet = {
     console.log(what)  
   },
   call: function (func, outputVar, scope) {
-    console.log(func)    
+    var line = func[0];
+    var funcScope = func[0]
+    callStack.
+    pc = line; 
+
   },
   "return": function () {
      
@@ -122,12 +126,12 @@ var getLineStr = function () {
   return line;
 }
 
+var pc = 0; //program counter
 var interpretBytecode = function (bytecodes, scope) {
   var line, fn, args, ret;
   var scope = scope || globalScope
-  var i = 0;
   var bytecodesLength = bytecodes.length
-  while (i < bytecodesLength) {
+  while (pc < bytecodesLength) {
     line = bytecodes[i];
     fn = line[0]; 
     args = line.slice(1);
@@ -156,7 +160,7 @@ var interpretBytecode = function (bytecodes, scope) {
     if (ret == killSignal) {
       break; 
     }
-    i += 1
+    pc += 1
   }
   return ret
 }
