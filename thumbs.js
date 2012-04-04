@@ -297,7 +297,7 @@
     convertStringNestedArgsToString(nestedArgs)
     var value = rest.join(" ") 
     value += nestedArgs.join("\n")
-    value = value.replace(/\$([\w]+)/g, function (whole, word) {
+    value = value.replace(/\$([\w\-]+)/g, function (whole, word) {
       return get(word, currentScope) 
     })
     return value;
@@ -404,7 +404,7 @@
 
   var set = function (name, value, currentScope, opts) {
 
-    var names = name.split(/\.|\:/)
+    var names = name.toString().split(/\.|\:/)
 
     name = name.toLowerCase()
     if (opts && opts.onlySetInCurrentScope) {
@@ -590,6 +590,8 @@
           return set(args[0], args[1], fn) 
         }
       }
+    } else if (fn.type != "fn" && (isArray(fn) || isObject(fn))) {
+      return function () { return fn[args[0]] }
     } else {
       var compiled = {
         scope: newScope,
@@ -684,7 +686,7 @@
   var get = function (name, lookupScope, opts) {
     opts = opts || {}
     lookupScope = lookupScope || currentScope;
-
+    name = name.toString()
 
     if (name == "0") {
       var a = 1 
@@ -701,7 +703,7 @@
       return name - 0
     }
 
-    var names = name.split(/\.|\:/)
+    var names = name.toString().split(/\.|\:/)
     if (names[names.length - 1] == "") { //remove the last dot for function calls
       names.pop();
       name = name.substr(name, name.length - 1)
