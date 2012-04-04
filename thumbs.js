@@ -660,8 +660,19 @@
     var value = get(name, lookupScope, {inChain: true})
     return chainGet(names, symbols, value, originalScope);
   }
+  
+  var isStringLiteral = function (name) {
+     
+    if (name.charAt && isStringStart(name.charAt(0))) {
+      return name.substring(1);
+    } else if (name.charAt && isStringStart(name.charAt(name.length - 1))) {
+      return name.substring(0, name.length - 1);
+    } else {
+      return false; 
+    }
+  }
 
-
+  name.charAt && isStringStart(name.charAt(0))
   //TODO: get can be an object! change
   //TODO: also include getter and setter options
   var get = function (name, lookupScope, opts) {
@@ -676,9 +687,10 @@
     if (!name) {
       return name
     }
-    
-    if (name.charAt && isStringStart(name.charAt(0))) {
-      return name.substring(1) 
+   
+    var stringLiteral = isStringLiteral(name);
+    if (stringLiteral) {
+      return stringLiteral;
     } else if (name - 0 == name && !opts.inChain) { //wierd
       return name - 0
     }
