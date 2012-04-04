@@ -672,7 +672,6 @@
     }
   }
 
-  name.charAt && isStringStart(name.charAt(0))
   //TODO: get can be an object! change
   //TODO: also include getter and setter options
   var get = function (name, lookupScope, opts) {
