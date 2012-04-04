@@ -220,6 +220,11 @@
 
       return fakeThis;
     },
+    "array": function () {
+      var args;
+      args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      return args;
+    },
     "length": function (str) { return str.length;},
     "lessthan": function (a, b) { return a < b;},
     "greaterthan": function (a, b) { return a > b;},
@@ -368,7 +373,8 @@
     if (isStringStart(second)) { //todo. do a faster way of converting to string //cache or something
       value = setString(rest, nestedArgs, currentScope)
     } else if (second == "+") {
-      value = setList(rest, nestedArgs, currentScope)
+      //value = setList(rest, nestedArgs, currentScope)
+      value = setFuncCall("array", rest, nestedArgs, currentScope); 
     } else if (second == "*") {
       value = setFunction(rest, nestedArgs, currentScope)
     } else if (second == ">") {
@@ -438,6 +444,7 @@
   } 
    
   var setList = function (rest, nestedArgs, currentScope) {
+    return; //deprecated
     var args = []
     convertArgs(0, args, {}, {}, rest, nestedArgs, currentScope) 
     return {
