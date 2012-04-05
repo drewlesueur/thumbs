@@ -766,7 +766,7 @@
     }
     if (first == "stop") {
       return stopSignal;
-    } if (isStringStart(first)) { //todo handle all the rest where it starts with a symbol
+    } if (isStartSymbol(first)) { //todo handle all the rest where it starts with a symbol
       var theRest = [second].concat(__slice.call(rest))
       var value = generateValue(first, theRest, nestedArgs, currentScope);
       return value;

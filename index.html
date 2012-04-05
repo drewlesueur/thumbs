@@ -163,6 +163,17 @@ alert. '
 </script>
 
 <script type="text/thumbs" id="tests">
+' tests start here
+get-obj *
+  #
+    a 1
+    b 2
+
+obj get-obj.
+eq. 1 obj.a
+
+
+
 thumbs-exists not. is. false thumbs  
 eq. thumbs-exists true
 
