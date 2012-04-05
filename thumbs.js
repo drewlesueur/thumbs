@@ -107,6 +107,9 @@
   }
 
   var rawScope = {
+    "debugger": function () {
+      debugger;
+    },
     "js": function (code) {
       return eval(code);
     }, 
@@ -350,7 +353,7 @@
       body: fn.body
     }
     callThumbsFunction(compiled, opts)
-    delete retScope.parentScope;
+    //delete retScope.parentScope;
     var value = {
       type: "map",
       body: retScope.body,

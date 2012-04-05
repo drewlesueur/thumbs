@@ -170,6 +170,23 @@ alert. '
 ' start tests
 ' tests start here
 
+outer-var 100
+
+getword > yo'
+
+hoth *
+  ice #
+    size outer-var
+    yo getword 
+    yo2 *
+      getword.
+
+ice hoth.
+eq. ice.size 100
+eq. yo' ice.yo.
+
+eq. yo' ice.yo2.
+
 a js. '
   var a = 1
   a + 20
