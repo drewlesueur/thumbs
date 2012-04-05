@@ -107,6 +107,9 @@
   }
 
   var rawScope = {
+    "js": function (code) {
+      return eval(code);
+    }, 
     "do": function (fn) {
       return fn();
     },
