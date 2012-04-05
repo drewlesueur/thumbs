@@ -160,10 +160,34 @@ alert. '
     this.eyes = eyes
     this.legs = legs
   }
+
+  var getThumbsVar = function (name) {
+    return Thumbs.get(name);
+  } 
 </script>
 
 <script type="text/thumbs" id="tests">
+' start tests
 ' tests start here
+
+starship enterprise'
+gotten-starship getThumbsVar. starship'
+eq. gotten-starship enterprise'
+
+energize *
+  captain kirk'
+  the-captain getThumbsVar. captain'
+
+eq. kirk' energize.
+
+
+prosper *
+  thumbs.set. spock' vulcan'
+  officer thumbs.get. spock'
+
+eq. vulcan' prosper.
+
+
 
 numb do. *
   cool-numb 7
@@ -179,8 +203,6 @@ get-obj *
 
 obj get-obj.
 eq. 1 obj.a
-
-
 
 thumbs-exists not. is. false thumbs  
 eq. thumbs-exists true

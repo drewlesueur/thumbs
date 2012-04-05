@@ -406,7 +406,7 @@
   }
 
   var set = function (name, value, currentScope, opts) {
-
+    currentScope = currentScope || theCurrentScope
     var names = name.toString().split(/\.|\:/)
 
     name = name.toLowerCase()
@@ -688,7 +688,7 @@
   //TODO: also include getter and setter options
   var get = function (name, lookupScope, opts) {
     opts = opts || {}
-    lookupScope = lookupScope || currentScope;
+    lookupScope = lookupScope || theCurrentScope;
     name = name.toString()
 
     if (name == "0") {
@@ -868,7 +868,8 @@
   Thumbs.run = run //runs raw code
   Thumbs.runFile = runFile
   Thumbs.addScope = addScope
-
+  Thumbs.get = get 
+  Thumbs.set = set
 //borrowed from
 //https://raw.github.com/jashkenas/coffee-script/master/src/browser.coffee
 
