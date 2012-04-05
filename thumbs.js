@@ -107,6 +107,7 @@
   }
 
   var rawScope = {
+    "thumbs": Thumbs,
     "in": function (time, f) {
       setTimeout(f, time)
     },
