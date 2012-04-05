@@ -107,6 +107,9 @@
   }
 
   var rawScope = {
+    "do": function (fn) {
+      return fn();
+    },
     "thumbs": Thumbs,
     "in": function (time, f) {
       setTimeout(f, time)
@@ -141,7 +144,6 @@
     div: function (a, b) {
       return a / b 
     },
-    "do": function () {},
     "add": function () {
       var sum = 0;
       for (var i = 0; i < arguments.length; i++)
