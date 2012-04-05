@@ -9,7 +9,7 @@
 <script src="thumbs.js"></script>
 
 <script type="text/x-thumbs-test" id="hello_world" data-name="Hello world">
-Alert $ Hello World
+alert. ' Hello World
 </script>
 <script type="text/plain" id="hello_world_js" data-name="Hello world js">
   alert("Hello world");
@@ -70,9 +70,9 @@ Alert $ Hello World
 
 <script type="text/x-thumbs-test" id="function" data-name="A function">
 sayHi * name
-  $ Hello $name
+  ' Hello $name
 
-Alert SayHi $thumbs
+alert. sayHi. thumbs'
 </script>
 <script type="text/plain" id="function_js" data-name="A function js">
   var sayHi = function (name) {
@@ -85,15 +85,15 @@ Alert SayHi $thumbs
 incrementorMaker *
   x 0
   incrementor *
-    x Add 1 x
+    x add. 1 x
 
-inc IncrementorMaker
+inc incrementorMaker.
 
-a Inc
-b Inc
-c Inc
+a inc.
+b inc.
+c inc.
 
-Alert $
+alert. '
   closure results: $a $b $c
 </script>
 <script type="text/plain" id="closure_js" data-name="A closure js">
