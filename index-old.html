@@ -1,0 +1,913 @@
+<!doctype html>
+<head>
+  <!--<meta name="viewport" content="initial-scale = 1.0" />-->
+<style>
+  * {
+    font-family: Menlo, 'Bitstream Vera Sans Mono', 'DejaVu Mono', 'Monospace'
+  }
+</style>
+<script src="thumbs.js"></script>
+
+<script type="text/x-thumbs-test" id="hello_world" data-name="Hello world">
+alert. ' Hello World
+</script>
+<script type="text/plain" id="hello_world_js" data-name="Hello world js">
+  alert("Hello world");
+</script>
+<script>
+ var start = function () {
+   Thumbs.addScope({
+     newsay: function (word, word2) {
+       return "saying: " + word + " " + word2
+     },
+     callThisFunc: function (fn) {
+       return fn("hello", "world") 
+     },
+     find: function (selector) {
+       return document.querySelector(selector)
+     },
+     creatEl: function (what) {
+       return document.createElement(what) 
+     } 
+   })
+   var thumbsCode = document.querySelector("#thumbs_code")
+   var jsCode = document.querySelector("#js_code")
+   var menu = document.querySelector("#menu")
+   var tests = document.querySelectorAll('[type="text/x-thumbs-test"]')
+   var firstClick = null;
+   var currentCode = null;
+   var eachTest = function (test) {
+     var link = document.createElement('a') 
+     link.innerHTML = test.getAttribute('data-name')
+     link.style.padding = "10px"
+     var id = test.id
+     var jsVersion = document.querySelector("#" + id + "_js")
+     
+     link.href = "#"
+     var theOnclick = function () { 
+       currentCode = test.innerHTML.substring(1)
+       thumbsCode.innerHTML = currentCode;
+       jsCode.innerHTML = jsVersion.innerHTML.substring(1)
+       return false;
+     }
+     if (!firstClick) {
+       firstClick = theOnclick 
+     }
+     link.onclick = theOnclick 
+     link.style.display = "block"
+     menu.appendChild(link)
+   }
+   for (var i=0; i < tests.length; i++) {
+     eachTest(tests[i])   
+   }
+   firstClick()
+   var runButton = document.querySelector("#run")
+   runButton.onclick = function () {
+     Thumbs.run(currentCode)
+   }
+ }
+</script>
+
+<script type="text/x-thumbs-test" id="function" data-name="A function">
+sayHi * name
+  ' Hello $name
+
+alert. sayHi. thumbs'
+</script>
+<script type="text/plain" id="function_js" data-name="A function js">
+  var sayHi = function (name) {
+    return "Hello " + name; 
+  }
+  alert(sayHi("thumbs"));
+</script>
+
+<script type="text/x-thumbs-test" id="closure" data-name="A closure">
+incrementorMaker *
+  x 0
+  incrementor *
+    x add. 1 x
+
+inc incrementorMaker.
+
+a inc.
+b inc.
+c inc.
+
+alert. '
+  closure results: $a $b $c
+</script>
+<script type="text/plain" id="closure_js" data-name="A closure js">
+  var incrementorMaker = function () {
+    var x = 0;
+    var incrementor = function () {
+      x += 1;
+      return x;
+    }
+    return incrementor;
+  }
+
+  var inc = incrementorMaker();
+
+  var a = inc();
+  var b = inc();
+  var c = inc();
+
+  alert("closure results: " +
+    a + " " + b + " " + c)
+</script>
+
+<script>
+  var rombus = "4 equal sides"
+  var rectangles = ["golden", "square", "long"]
+  var qs = document.querySelector
+  var jsObj = {a:1, smile: function () {return 100}, go: function () {this.a = 2}}
+  var plow = function () {return "king"}
+  
+  //var name must be lower case
+  var otherObj = {
+    add1: function (x) { return x - 0 + 1 },
+    add2: function (x) {return x - 0 + 2},
+    numb: 3
+  } 
+
+  var eat = function (a) {
+    return a.substring(1) 
+  }
+
+  var takeFunc = function (fn) {
+    return fn(1,2,3) 
+  } 
+
+  var fakeButton = {}
+  var triggerOnclick = function () {
+    return fakeButton.onclick(1) 
+  }
+
+  var crazyFunction = function () {
+    return "yo quiero verla" 
+  }
+
+  var thirdIndex = function (list) {
+    return list[2];
+  }
+
+  var getName = function (map) {
+    return map.name;
+  }
+  var spaceAtEnd = "yo ";
+
+  animalClass = function (eyes, legs) {
+    this.eyes = eyes
+    this.legs = legs
+  }
+
+  var getThumbsVar = function (name) {
+    return Thumbs.get(name);
+  } 
+</script>
+
+<script type="text/thumbs" id="tests">
+' start tests
+' tests start here
+
+
+document.createElement div'
+div.innerHTML ' hello wolrd
+
+outer-var 100
+
+getword > yo'
+
+hoth *
+  ice #
+    size outer-var
+    yo getword 
+    yo2 *
+      getword.
+
+ice hoth.
+eq. ice.size 100
+eq. yo' ice.yo.
+
+eq. yo' ice.yo2.
+
+a js. '
+  var a = 1
+  a + 20
+
+eq. a 21
+
+starship enterprise'
+gotten-starship getThumbsVar. starship'
+eq. gotten-starship enterprise'
+
+energize *
+  captain kirk'
+  the-captain getThumbsVar. captain'
+
+eq. kirk' energize.
+
+
+prosper *
+  thumbs.set. spock' vulcan'
+  officer thumbs.get. spock'
+
+eq. vulcan' prosper.
+
+
+
+numb do. *
+  cool-numb 7
+  add. 1 cool-numb
+
+eq. numb 8
+eq. cool-numb null
+
+get-obj *
+  #
+    a 1
+    b 2
+
+obj get-obj.
+eq. 1 obj.a
+
+thumbs-exists not. is. false thumbs  
+eq. thumbs-exists true
+
+eq. 3 otherObj. numb' 
+
+numbers + 1 2
+  3 4
+  ' a string
+the-value 2
+eq. 3 numbers. the-value
+
+
+my-age 27
+phrase ' my age is $my-age
+eq. phrase ' my age is 27
+
+eq. numbers.2 3
+eq. numbers.4 ' a string
+
+the-value 2
+eq. 3 numbers:the-value
+
+
+
+myAnimal new. animalClass 2 4
+eq. myAnimal.eyes 2
+eq. myAnimal.legs 4
+
+person #
+  run * 
+    ' the person is running
+
+phrase person.run. 
+eq. phrase ' the person is running
+
+
+sayHi * name
+  ' hello $name
+
+phrase sayHi. 'drew
+eq. phrase ' hello drew
+
+phrase sayHi. drew'
+eq. phrase ' hello drew
+
+the-phrase ' yo world
+eq. the-phrase ' yo world
+
+phrase SayHi $drew
+Eq phrase $ hello drew
+
+
+Start
+
+stuff #
+Stuff $wow 1100
+Eq stuff.wow 1100
+one Stuff $wow
+Eq one 1100
+
+
+people + $tom $dale $bert
+peopleActions #
+eachPerson * person
+  PeopleActions person *
+    $ hello $person
+  $ my name is $person
+
+Loop people eachPerson
+Say peopleActions
+
+hiBert PeopleActions.bert
+hiDale PeopleActions.dale
+hiTom PeopleActions.tom
+
+Eq hiBert $ hello bert
+Eq hiDale $ hello dale
+Eq hiTom $ hello tom
+a 0
+If
+  > a Add 1 2
+    Is a 4
+  > Eq a 4 
+  > Eq a 3
+
+
+
+getNumber > 7
+Eq 7 GetNumber
+
+Eq true LessThan 1 10
+Eq false LessThan 10 1
+Eq true GreaterThan 10 1
+Eq false GreaterThan 1 10
+
+Eq 1 jsObj.a
+JsObj.go
+Eq 2 jsObj.a
+
+Eq spaceAtEnd $ yo 
+
+
+
+count 0
+
+While
+  > Not Is count 3
+  > count Add 1 count
+Eq count 3
+
+
+a + 1 2 5
+theThird ThirdIndex a
+Eq theThird 5
+
+b #
+  name $drew
+  age 27
+
+name GetName b
+Eq name $drew
+
+
+
+theConcat * a theB
+  $ $a $theB
+ret CallThisFunc theConcat
+Eq ret $ hello world
+
+nullFunc *
+b Add NullFunc
+$ the above shouldnt throw an error
+
+myFunc *
+  CrazyFunction
+
+phrase MyFunc
+Eq phrase $ yo quiero verla
+
+str $
+  a
+  b
+
+multiline $
+  multi line with
+    indents
+    more
+    300
+  non indents
+  more2
+
+Say ConvertToJSON multiline
+
+Eq multiline $ 
+  multi line with
+    indents
+    more
+    300
+  non indents
+  more2
+
+
+
+
+ret Plow
+Eq ret $ king
+
+numb OtherObj.add2 3
+Eq numb 5
+
+numb OtherObj.add1 OtherObj.add2 3
+Eq numb 6
+
+numb OtherObj.add1 OtherObj.add2 otherObj.numb
+Eq numb 6
+
+fakeButton.onclick * a
+  Add a 10 
+
+value TriggerOnclick
+Eq value 11
+
+
+
+TakeFunc * a b
+  Add a b
+
+
+smaller Eat $ word
+Eq smaller $ord
+
+name $drew
+sentance $ my name is drew.
+sentance2 $ my name is $name.
+Eq sentance sentance2
+
+
+body document.body
+$ body.onclick > Alert $clicked
+
+a someFun
+ret JsObj.smile
+Eq ret 100
+
+
+
+Eq rombus $ 4 equal sides
+Eq rectangles.1 $square
+
+
+times2 * numb
+  Mult numb 2
+
+myNumber Times2 GetNumber
+Eq myNumber 14
+
+
+coolify * word
+  $ $word cool!
+
+dudeify * word
+  $ $word dude
+
+buzz Dudeify Coolify $keys
+Eq buzz $ keys cool! dude
+
+coolified coolify.phones
+Eq coolified $ phones cool!
+
+
+myWord $square
+Eq coolify:myWord $ square cool!
+
+countries + $chile $mexico $colombia $usa
+Eq countries.0 $chile
+
+a 1
+b 2
+c Is a b
+Eq c false
+
+a 1
+b 2
+c Is a b
+Eq c false
+
+
+
+determineAnimal * travel
+  animal $ none
+
+  If
+    > Is travel $legs
+    > animal $ bear
+    > Is travel $bicycle
+    > animal $ human
+    > Is travel $flight
+    > animal $bird
+    > animal $unknown
+  animal
+
+flyingAnimal DetermineAnimal $flight
+Eq flyingAnimal $bird
+
+all4sAnimal DetermineAnimal $legs
+cyclingAnimal DetermineAnimal $bicycle
+unknownAnimal DetermineAnimal $ ???
+
+Eq all4sAnimal $bear
+Eq cyclingAnimal $human
+Eq unknownAnimal $unknown
+
+
+makeguess * numb
+  Is numb 7
+    > $ you win
+    > $ you loose
+status Makeguess 7
+status2 MakeGuess 8
+Eq status $ you win
+Eq status2 $ you loose
+
+fac * n
+  Is n 0
+    > 1
+    > nLess1 Sub n 1
+      facNLess1 Fac nLess1
+      Mult n facNLess1
+
+ans Fac 3
+Eq ans 6
+
+sport $ none
+ball $white
+Is ball $white *
+  sport $ volleyball
+Is ball $orange *
+  sport $ basketball
+Eq sport $ volleyball
+
+
+getCookie2 *
+  $ cookie!
+myCookie2 GetCookie2
+Eq myCookie2 $ cookie!
+
+
+$ one line function
+getCookie > $ cookie!
+myCookie GetCookie
+Eq myCookie $ cookie!
+
+
+
+said NewSay $yo $world
+Eq said $ saying: yo world
+
+Eq $volleyball $ volleyball
+
+In 100 *
+  Say $ 100 miliseconds passed
+
+singer #
+singer.name $ javiera mena
+singer.country $ chile
+
+Eq singer.name $ javiera mena
+prop $country
+Eq singer:prop $chile
+
+singer.sing * song
+  $ singing $song
+
+singing Singer.sing $ moon rock light
+Eq singing $ singing moon rock light
+
+
+argTest * a b c d e
+  a $ $a $b $c $d $e
+
+t ArgTest $h $e $l $l $o
+Eq t $ h e l l o
+
+myFn * a b
+  B 1 2
+
+three MyFn
+  0
+  * x y
+    Add x y
+Eq three 3
+
+myFn * a b c d
+  C a b d
+
+three MyFn
+  0
+  1
+  * x y z
+    Add x y z
+  4 5 6
+
+Eq three 5
+
+
+$ --------
+
+$ defining a function
+adding * x y
+  Add x y
+
+$ setting a variable to the result of a function call
+added Adding 1 5
+Eq added 6
+
+$ showing calling functions in a row
+negative Neg Add 5 6
+Eq negative -11
+
+$ a closure
+incmaker *
+  x 0
+  inc *
+    x Add 1 x
+
+inc Incmaker
+a Inc
+b Inc
+c Inc
+Eq a 1
+Eq b 2
+Eq c 3
+
+$ closure without stars for functions
+incmaker2
+  x 10
+  inc
+    x Add 2 x
+
+$ coffeescript version
+  incMaker = ->
+    x = 10
+    inc = ->
+      x = x + 2
+
+inc2 Incmaker2
+a Inc2
+b Inc2
+c Inc2
+Eq a 12
+Eq b 14
+Eq c 16
+
+$ interpolation of strings
+name $ Drew LeSueur
+age 27
+info $ $name is $age years old.
+realInfo $ Drew LeSueur is 27 years old.
+Eq info realInfo
+
+
+$ assigning one variable to another
+answer 2001
+theAnswer answer
+Eq theAnswer 2001
+Eq answer 2001
+
+$ maps (hashes)
+nose $notCarrots
+snowman #
+  name $ Mr. Snowman
+  nose $carrots
+  numberofcoals Add 2 4
+
+snowmanName $ Mr. Snowman
+Eq snowman.name snowmanName
+Eq nose $notCarrots
+Eq snowman.nose $carrots
+Eq snowman.numberOfCoals 6
+
+myProp $nose
+Eq snowman:myProp $carrots
+
+band #
+  name $Aterciopelados
+  members #
+    first $ Andrea Echeverri
+    second $ Hector Buitrago
+  cds #
+    caribe #
+      name $ caribe atomico
+      art $ shark
+
+andrea $ Andrea Echeverri
+Eq band.members.first andrea
+
+prop $cds
+Eq band:prop.caribe.art $shark
+prop2 $name
+caribe $ caribe atomico
+Eq band:prop.caribe:prop2 caribe
+
+person #
+person.name $ Drew LeSueur
+Eq person.name $ Drew LeSueur
+
+$ assigning a function to another and calling it      
+action adding    
+result Action 11 12
+Eq 23 result
+
+$ passing a function as a parameter to another function
+doThisThing * fn b c
+  Fn b c
+dalmations DoThisThing adding 100 1
+Eq dalmations 101
+
+doThisThing2 * a b fn
+  Fn a b
+sheep DoThisThing2 90 9 * c d
+  Adding c d 
+Eq sheep 99
+
+sendText * text
+  to text.to
+  from text.from
+  ret $ a text was sent to $to from $from
+
+status SendText #
+  from $drew
+  to $aimee
+
+Eq status $ a text was sent to aimee from drew
+
+saying * message
+  Say message
+
+adding2 * a b c d e f
+  Add a b c d e f
+ret Adding2
+  1 2
+  3 4
+  5 6
+Eq ret 21
+
+ret Add
+  1 2
+  3 4
+  5 6
+Eq ret 21
+
+
+ret Add
+  Add 1 2
+  3
+  Add 4 5
+Eq ret 15
+
+
+argTest2 * a b c d e
+  a $ $a $b $c $d $e
+  a
+
+t ArgTest2 $h $e $l $l $o
+Eq t $ h e l l o
+
+argTest3 * a b c d e
+  $ $a $b $c $d $e
+t ArgTest3 $h $e $l $l $o
+Eq t $ h e l l o
+
+argTest4 * a b c d e
+  $ $a $b $c $d $e
+t ArgTest4 
+  $h $e $l
+  $l $o
+Eq t $ h e l l o
+
+Say $ all done
+
+</script>
+
+<script type="text/x-thumbs-2">
+myProp $eyes
+person:myProp
+person.eyes
+Eq person.eyes person:myProp
+
+incMaker *
+  x 0
+  inc *
+    x Add 1 x
+
+inc IncMaker
+x Inc
+Say x
+x Inc
+Say x
+
+
+</script>
+<script type="text/x-thumbs-2">
+$ everything is a function that does what it does??
+$ or simple goto
+mytext $
+  this is a totally cool
+  string that is verry long
+
+mytext2 $ this is another text not as big
+
+message $ hi
+Say message
+Say $HelloWorld
+sayHi * name age
+  Say age
+
+snowman #
+  eyes $carrots
+  body $snow
+
+snowman.mouth $pipe
+
+
+mylist + long list of stuff
+
+myname $ Drew LeSueur
+myage 27
+SayHi myname myage
+
+answer Add 7 5
+
+</script>
+<script type="text/javascript">
+
+
+</script>
+<link rel="stylesheet" href="dejavu/stylesheet.css" type="text/css" charset="utf-8">
+<style>
+  * {
+		font-family: 'DejaVuSansMonoBook';
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  textarea {
+  font-size: 16px;
+  margin-right: 10%; width:90%; height:2000px;
+  }
+  .set {
+    color: blue;  
+  }
+  .call {
+    color: #00AA00;  
+  }
+  .text {
+    color: #AA0000;
+		font-family2: 'HoeflerText-Regular';
+  }
+
+  .selected { background-color: rgb(0,255,255); }
+
+#code {
+  font-size: 16px;
+  margin-right: 10%; width:90%; height:2000px;
+}
+.line {
+  
+}
+</style>
+
+
+</head>
+<body onload="">
+<h1>Thumbs</h1>
+<div>A programming language for your thumbs.
+  
+<span style="font-size: 10px;">
+By <a href="http://twitter.com/drewlesueur">Drew LeSueur</a>
+<a href="http://github.com/drewlesueur/thumbs">source</a>
+<a href="play.html">play</a>
+</span>
+</div>
+<div>
+  Here are a few examples of code written in Thumbs and their JS equivalents.
+</div>
+<br />
+
+<div>
+  <table width="100%">
+    <tr>
+      <td width="20%" valign="top">
+        <div id="menu"></div>
+      </td>
+      <td width="80%" valign="top">
+        <table>
+          <tr>
+            <td>
+              <input id="run" style="margin-left:10px;" type="button" value="Run" />
+              
+            </td>
+            <td>
+            </td>
+          </tr>
+          <tr>
+            <td valign="top">
+              <pre id="thumbs_code" style="margin: 10px;"></div>
+            </td>
+            <td valign="top">
+              <pre id="js_code" style="margin: 10px;"></div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+</body>
+</html>
+
+

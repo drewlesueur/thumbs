@@ -39,6 +39,18 @@
 }
 
 @font-face {
+    font-family: 'DejaVuSansMono';
+    src: url('DejaVuSansMono-Bold-webfont.eot');
+    src: url('DejaVuSansMono-Bold-webfont.eot?#iefix') format('embedded-opentype'),
+         url('DejaVuSansMono-Bold-webfont.woff') format('woff'),
+         url('DejaVuSansMono-Bold-webfont.ttf') format('truetype'),
+         url('DejaVuSansMono-Bold-webfont.svg#DejaVuSansMonoBold') format('svg');
+    font-weight: bold;
+    font-style: normal;
+
+}
+
+@font-face {
     font-family: 'DejaVuSansMonoBoldOblique';
     src: url('DejaVuSansMono-BoldOblique-webfont.eot');
     src: url('DejaVuSansMono-BoldOblique-webfont.eot?#iefix') format('embedded-opentype'),
