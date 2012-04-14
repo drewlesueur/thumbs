@@ -4,18 +4,18 @@
 
 ;(function () {
 var root = this;
-var Thumbs;
+var thumbs;
 if (typeof exports !== 'undefined') {
-  Thumbs = exports;
-  Thumbs.global = global
+  thumbs = exports;
+  thumbs.global = global
 } else {
-  Thumbs = root.Thumbs = {};
-  Thumbs.global = window
+  thumbs = root.thumbs = {};
+  thumbs.global = window
 }
 
 var lineNumber;
 
-var globalScope = Thumbs.scope = {
+var globalScope = thumbs.scope = {
   b: "400"
 }
 
@@ -82,15 +82,46 @@ var assignLabels = function (lines, filename, scope) {
     }
   }
 }
+
+
+var removeNestings = function (code) {
+  var code = code.split("")
+  var i = 0;
+  var state = "normal";
+  var indent = 0;
+  var doMultiLineString = function () {
+    var str = [];
+    //find next indent that is the same as the current
+    var strIndent = indent + 1;
+    i += 1
+    while (true) {
+      chr = "\n "  
+    }
+     
+  }
+ 
+  while (i < code.length) {
+    var chr = code[i];
+    if (state == "normal") {
+      if (chr == "'") state = "sart-quote";
+    }  else if (state == "startquote") {
+       if (ch == " ") doMultiLineString();
+    }
+  } 
+}
+
 var compile = function (code, filename, scope) {
   var compiled = []
   //right now just going to compile the bytecode subset
   // that can be put into thumbs source
+  code = removeNestings(code);
   var lines = code.split("\n");
   files[filename] = lines;
   var line, words, first, func;
   //once throught getting all the labels
   assignLabels(lines, filename, scope);
+  
+  code = code.join("\n")
   for (var i = 0; i < lines.length; i++) {
     line = lines[i] 
     var firstChar = line.charAt(0);
@@ -132,13 +163,13 @@ var interpretBytecode = function (bytecodes, scope) {
   var scope = scope || globalScope
   var bytecodesLength = bytecodes.length
   while (pc < bytecodesLength) {
-    line = bytecodes[i];
+    line = bytecodes[pc];
     fn = line[0]; 
     args = line.slice(1);
     var argsLength = args.length
     lastFile = args[argsLength - 2]
     lastLine = args[argsLength - 1]
-    lastBytecodeLine = i
+    lastBytecodeLine = pc
     if (fn == instructionSet.debugger) {
       debugger; 
     }
@@ -178,18 +209,18 @@ var addScope = function (obj) {
   }  
 }
 
-Thumbs.runScripts = runScripts
-Thumbs.run = run //runs raw code
-Thumbs.runFile = runFile
-Thumbs.addScope = addScope
-Thumbs.getLineStr = getLineStr
+thumbs.runScripts = runScripts
+thumbs.run = run //runs raw code
+thumbs.runFile = runFile
+thumbs.addScope = addScope
+thumbs.getLineStr = getLineStr
 
 //borrowed from
 //https://raw.github.com/jashkenas/coffee-script/master/src/browser.coffee
 
 if (typeof window === "undefined" || window === null) return;
 
-Thumbs.load = function(url, callback) {
+thumbs.load = function(url, callback) {
   var xhr;
   xhr = new (window.ActiveXObject || XMLHttpRequest)('Microsoft.XMLHTTP');
   xhr.open('GET', url, true);
@@ -198,7 +229,7 @@ Thumbs.load = function(url, callback) {
     var _ref;
     if (xhr.readyState === 4) {
       if ((_ref = xhr.status) === 0 || _ref === 200) {
-        Thumbs.run(xhr.responseText, url);
+        thumbs.run(xhr.responseText, url);
       } else {
         throw new Error("Could not load " + url);
       }
@@ -227,9 +258,9 @@ var runScripts = function() {
     script = thumbses[index++];
     if ((script != null ? script.type : void 0) === 'text/thumbs') {
       if (script.src) {
-        return Thumbs.load(script.src, execute);
+        return thumbs.load(script.src, execute);
       } else {
-        Thumbs.run(script.innerHTML.slice(1), "scripttag" + (index - 1));
+        thumbs.run(script.innerHTML.slice(1), "scripttag" + (index - 1));
         return execute();
       }
     }
