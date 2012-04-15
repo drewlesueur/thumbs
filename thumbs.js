@@ -2,19 +2,11 @@
 
 var ObjProto = Object.prototype
 var toString = ObjProto.toString
-var isFunction = function (obj) {
-  return toString.call(obj) == '[object Function]';
-}
-var isObject = function (obj) {
-  return obj === Object(obj);
-}
-var isArray = function(obj) { //todo: use native if available like underscore.js
-  return toString.call(obj) == '[object Array]';
-};
-
-var isString = function(obj) {
-  return toString.call(obj) == '[object String]';
-};
+var isFunction = function (obj) { return toString.call(obj) == '[object Function]'; }
+var isObject = function (obj) { return obj === Object(obj); }
+//todo: use native if available like underscore.js
+var isArray = function(obj) { return toString.call(obj) == '[object Array]'; };
+var isString = function(obj) { return toString.call(obj) == '[object String]'; };
 
 var root = this;
 var thumbs;
@@ -54,15 +46,17 @@ var currentLineNumber = 0
 var currentFileName = ""
 var pc = 0;
 
-var rawCall = function () {}
+var funcBag = [];
+var funcBagStack = [funcBag];
+var args = [];
+
+var rawCall = function () {
+    
+}
 var rawPushToCall = function () {}
-var rawSetLineNumber = function (lineNumber) {
-  currentLineNumber = lineNumber;
-}
-var rawSetFileName = function () {}
-var rawGet = function (arg) {
-  console.log("getting " + arg)
-}
+var rawSetLineNumber = function (lineNumber) { currentLineNumber = lineNumber; }
+var rawSetFileName = function (fileName) { currentFileName = fileName }
+var rawGet = function (arg) { console.log("getting " + arg + "(" + pc + ")") }
 
 var makeCachingSystem = function (fn) {
   //just caches the func, arg pair so i don't new up a bunch of arrays
@@ -83,12 +77,15 @@ var getCachedLineNumberByteCode = makeCachingSystem(rawSetLineNumber);
 var getCachedFileNameByteCode = makeCachingSystem(rawSetFileName)
 var getCachedGetByteCode = makeCachingSystem(rawGet)
 
+var phase2to3map = {} 
 var flattenCodeArrays = function (codeArrays) {
   var flattenedCodeArray = []
+  phase2to3map[]
   for (var i = 0; i < codeArrays.length; i++) {
     var codeArray = codeArrays[i]
     var lineNumber = codeArray[0]
     var fileName = codeArray[1]
+    phase2to3map[i] = flattenedCodeArray.length;
     flattenedCodeArray.push(getCachedLineNumberByteCode(lineNumber))
     flattenedCodeArray.push(getCachedFileNameByteCode(fileName))
     for (var j = 2; j < codeArray.length; j++) {
@@ -102,10 +99,10 @@ var flattenCodeArrays = function (codeArrays) {
 }
 
 var run = function (code, fileName, scope) {
-  codeArrays = flattenNestings(code, fileName);
-  flattenedCodeArray = flattenCodeArrays(codeArrays);
+  phase2code = flattenNestings(code, fileName);
+  phase3code = flattenCodeArrays(phase2code, fileName);
   while (true) {
-    todo = flattenedCodeArray[pc]; 
+    todo = phase3code[pc]; 
     if (!todo) break;
     todo();
     pc += 1
