@@ -4,8 +4,7 @@ var ObjProto = Object.prototype
 var toString = ObjProto.toString
 var isFunction = function (obj) { return toString.call(obj) == '[object Function]'; }
 var isObject = function (obj) { return obj === Object(obj); }
-//todo: use native if available like underscore.js
-var isArray = function(obj) { return toString.call(obj) == '[object Array]'; };
+var isArray = Array.isArray || function(obj) { return toString.call(obj) == '[object Array]'; };
 var isString = function(obj) { return toString.call(obj) == '[object String]'; };
 
 var root = this;
@@ -18,27 +17,54 @@ if (typeof exports !== 'undefined') {
   thumbs.global = window
 }
 
-
 var globalScope = thumbs.scope = {thumbs: thumbs}
 
 var killSignal = "stooooooop!!!!!";
 
-var flattenNestings = function (code, fileName) {
-  //flatten nestings and one-line strings
-
+var codeToTree = function (code, fileName) {
   originalCode = "" +
     "double . x" +
     "  mult x 2" +
     "ten double 5"
-  
-  return [
-    [0, fileName, "double", "fn", 3],
-    [2, fileName, "ten", "double", 5],
-    [2, fileName, "stop"],
-    [0, fileName, "x", "args", 0],
-    [1, fileName, "mult", "x", 2],
-    [1, fileName, "return"]
+
+  return [ 0, fileName, "do",
+    [0, fileName, "double", [0, fileName, ".", [0, fileName, "x"],
+        [1, fileName, "mult", "x", "2"]]],
+    [2, fileName, "ten", "double", "5"]
   ]
+}
+
+var id = 0;
+var getId = function (prefix) {
+  id += 1;
+  return prefix + id;
+}
+
+var treeToLines = function (tree, fileName, codeLines) {
+  codeLines = codeLines || [];
+  var childTree, lineNumber, fileName, getBytecode;
+  lineNumber = tree[0]
+  fileName = tree[1]
+  var lineNumberByteCode = getCachedLineNumberByteCode(lineNumber)
+  var fileNameByteCode =  getCachedFileNameByteCode(fileName)
+  //codeLines.push(lineNumberByteCode);
+  //codeLines.push(fileNameByteCode);
+
+  while (true) {
+    
+  }
+
+  //for (var i = 2; i < tree.length; i++) {
+  //  childTree = tree[i];
+  //  if (isString(childTree)) {
+  //    getBytecode = getCachedGetByteCode(childTree);
+  //    codeLines.push(getBytecode);
+  //    codeLines.push(rawCall);
+  //  } else if (isArray(childTree)) {
+  //    treeToLines(childTree, fileName, codeLines); 
+  //  }
+  //}
+  return codeLines;
 }
 
 
@@ -50,66 +76,41 @@ var funcBag = [];
 var funcBagStack = [funcBag];
 var args = [];
 
-var rawCall = function () {
-    
-}
+var rawCall = function () { }
 var rawPushToCall = function () {}
 var rawSetLineNumber = function (lineNumber) { currentLineNumber = lineNumber; }
 var rawSetFileName = function (fileName) { currentFileName = fileName }
 var rawGet = function (arg) { console.log("getting " + arg + "(" + pc + ")") }
 
-var makeCachingSystem = function (fn) {
+var makeCachingSystem = function (fn, name) {
   //just caches the func, arg pair so i don't new up a bunch of arrays
   var cache = {} 
   return function (arg) {
     if (arg in cache) {
       return cache[arg] 
     } else {
-      var ret = cache[arg] = function () {
-        fn(arg);
-      }
+      var ret = cache[arg] = name + "(" + arg + ")"; //function () { fn(arg); }
       return ret;
     }
   }
 }
 
-var getCachedLineNumberByteCode = makeCachingSystem(rawSetLineNumber);
-var getCachedFileNameByteCode = makeCachingSystem(rawSetFileName)
-var getCachedGetByteCode = makeCachingSystem(rawGet)
+var getCachedLineNumberByteCode = makeCachingSystem(rawSetLineNumber, "setLineNumber")
+var getCachedFileNameByteCode = makeCachingSystem(rawSetFileName, "setFileName")
+var getCachedGetByteCode = makeCachingSystem(rawGet, "get")
 
-var phase2to3map = {} 
-var flattenCodeArrays = function (codeArrays) {
-  var flattenedCodeArray = []
-  phase2to3map[]
-  for (var i = 0; i < codeArrays.length; i++) {
-    var codeArray = codeArrays[i]
-    var lineNumber = codeArray[0]
-    var fileName = codeArray[1]
-    phase2to3map[i] = flattenedCodeArray.length;
-    flattenedCodeArray.push(getCachedLineNumberByteCode(lineNumber))
-    flattenedCodeArray.push(getCachedFileNameByteCode(fileName))
-    for (var j = 2; j < codeArray.length; j++) {
-      var word = codeArray[j];
-      flattenedCodeArray.push(getCachedGetByteCode(word));
-      flattenedCodeArray.push(rawPushToCall);
-    }
-    flattenedCodeArray.push(rawCall);
-  }
-  return flattenedCodeArray
-}
 
 var run = function (code, fileName, scope) {
-  phase2code = flattenNestings(code, fileName);
-  phase3code = flattenCodeArrays(phase2code, fileName);
-  while (true) {
-    todo = phase3code[pc]; 
+  var codeTree = codeToTree(code, fileName);
+  var codeLines = treeToLines(codeTree, fileName);
+  console.log(codeLines);
+  while (false && true) {
+    todo = codeLines[pc]
     if (!todo) break;
-    todo();
+    todo()
     pc += 1
   }
 }
-
-var pc = 0; //program counter
 
 var runFile = function (file) {
   var fs = require("fs");
