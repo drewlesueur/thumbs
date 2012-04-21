@@ -6,6 +6,7 @@ var isFunction = function (obj) { return toString.call(obj) == '[object Function
 var isObject = function (obj) { return obj === Object(obj); }
 var isArray = Array.isArray || function(obj) { return toString.call(obj) == '[object Array]'; };
 var isString = function(obj) { return toString.call(obj) == '[object String]'; };
+var isNumber = function(obj) { return toString.call(obj) == '[object Number]'; };
 
 var root = this;
 var thumbs;
@@ -24,7 +25,7 @@ var killSignal = "stooooooop!!!!!";
 var codeToTree = function (code, fileName) {
   originalCode = "" +
     "double . x" +
-    "  mult x 2" +
+    " mult x 2" +
     "ten double 5"
 
   return [ 0, fileName, "do",
@@ -63,21 +64,23 @@ var branchToLines = function (branch, lines) {
   var fileName = branch[1]
   var lineNumberByteCode = getCachedLineNumberByteCode(lineNumber)
   var fileNameByteCode =  getCachedFileNameByteCode(fileName)
+  lines.push(rawStart)
   lines.push(lineNumberByteCode)
   lines.push(fileNameByteCode)
   var twig;
   for (var i = 2; i < branch.length; i++) {
     twig = branch[i]
-    if (isString(twig)) {
+    if (isString(twig) || isNumber(twig)) {
       lines.push(getCachedGetByteCode(twig)) 
+      lines.push(rawAdd)
     } else if (isArray(twig)) {
-      branchesToLines(twig, lines)    
+      branchToLines(twig, lines)    
     }
   }
-  var lineNumberByteCode = getCachedLineNumberByteCode(lineNumber)
-  var fileNameByteCode =  getCachedFileNameByteCode(fileName)
-
+  lines.push(rawEnd);
+  lines.push(rawAdd);
 }
+
 var branchesToLines = function (branches, lines) {
   lines = lines || [];
   var branch;
@@ -90,11 +93,10 @@ var branchesToLines = function (branches, lines) {
 var treeToLines = function (tree, fileName, codeLines) {
   var trees = [];
   separateFunctions(tree, trees);
-  trees.unshift([tree]);
+  var stop = [0, 0, "stop"]
+  trees.unshift([tree, stop]);
   console.log("debranched trees are")
   console.log(trees)
-  console.log("original tree is")
-  console.log(tree)
   var braches;
   var lines = [];
   for (var i = 0; i < trees.length; i++) {
@@ -123,7 +125,7 @@ var funcBagStack = [funcBag];
 var args = [];
 
 var rawStart = function () { return "starting function call"} 
-var rawEnd = function () { return "endin function call"}
+var rawEnd = function () { return "ending function call"}
 var rawAdd = function () { return "adding to args" }
 
 var rawSetLineNumber = function (lineNumber) { currentLineNumber = lineNumber; }
@@ -137,7 +139,7 @@ var makeCachingSystem = function (fn, name) {
     if (arg in cache) {
       return cache[arg] 
     } else {
-      var ret = cache[arg] = name + "(" + arg + ")"; //function () { fn(arg); }
+      var ret = cache[arg] = function () { return name + "(" + arg + ")"}  //function () { fn(arg); }
       return ret;
     }
   }
@@ -151,11 +153,12 @@ var getCachedGetByteCode = makeCachingSystem(rawGet, "get")
 var run = function (code, fileName, scope) {
   var codeTree = codeToTree(code, fileName);
   var codeLines = treeToLines(codeTree, fileName);
-  console.log(codeLines);
-  while (false && true) {
+  var ret;
+  while (true) {
     todo = codeLines[pc]
     if (!todo) break;
-    todo()
+    ret = todo()
+    console.log(ret)
     pc += 1
   }
 }
