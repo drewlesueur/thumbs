@@ -7,6 +7,7 @@ var isObject = function (obj) { return obj === Object(obj); }
 var isArray = Array.isArray || function(obj) { return toString.call(obj) == '[object Array]'; };
 var isString = function(obj) { return toString.call(obj) == '[object String]'; };
 var isNumber = function(obj) { return toString.call(obj) == '[object Number]'; };
+var last = function(arr) {return arr[arr.length - 1]}
 
 var root = this;
 var thumbs;
@@ -20,7 +21,7 @@ if (typeof exports !== 'undefined') {
 
 var globalScope = thumbs.scope = {thumbs: thumbs}
 
-var killSignal = "stooooooop!!!!!";
+var killSignal = "abort. repeat. abort. :)";
 
 var codeToTree = function (code, fileName) {
   originalCode = "" +
@@ -93,7 +94,7 @@ var branchesToLines = function (branches, lines) {
 var treeToLines = function (tree, fileName, codeLines) {
   var trees = [];
   separateFunctions(tree, trees);
-  var stop = [0, 0, "stop"]
+  var stop = [0, 0, killSignal]
   trees.unshift([tree, stop]);
   console.log("debranched trees are")
   console.log(trees)
@@ -116,21 +117,43 @@ var treeToLines = function (tree, fileName, codeLines) {
 }
 
 
-var currentLineNumber = 0
-var currentFileName = ""
+var currentLineNumber = 0;
+var currentFileName = "";
 var pc = 0;
 
-var funcBag = [];
-var funcBagStack = [funcBag];
-var args = [];
+var callBag;
+var callBagStack = [];
+var lastResult = null;
+var currentScope = globalScope;
+var callStack = [currentScope];
 
-var rawStart = function () { return "starting function call"} 
-var rawEnd = function () { return "ending function call"}
-var rawAdd = function () { return "adding to args" }
+var rawStart = function () {
+  callBag = []
+  callBagStack.push(callBag);
+  currentScope = {__parent: currentScope};
+  callStack.push(currentScope);
+  return "starting function call"
+} 
+var rawEnd = function () { 
+  callBagStack.pop()
+  callBag = last(callBagStack) 
+  callStack.pop()
+  currentScope = last(callStack)
+  return "ending function call"
+}
+
+var rawGet = function (arg) {
+  lastResult = null;
+  return ("getting " + arg + "(" + pc + ")")
+}
+
+var rawAdd = function () { 
+  callBag.push(lastResult);
+  return "adding to args"
+}
 
 var rawSetLineNumber = function (lineNumber) { currentLineNumber = lineNumber; }
 var rawSetFileName = function (fileName) { currentFileName = fileName }
-var rawGet = function (arg) { return ("getting " + arg + "(" + pc + ")") }
 
 var makeCachingSystem = function (fn, name) {
   //just caches the func, arg pair so i don't new up a bunch of arrays
