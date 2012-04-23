@@ -26,7 +26,17 @@ if (typeof exports !== 'undefined') {
 }
 
 var stopSignal = "abort. repeat. abort. :)";
-var globalScope = thumbs.scope = {thumbs: thumbs, "stop-signal": stopSignal}
+var globalScope = thumbs.scope = {
+  thumbs: thumbs,
+  "stop-signal": stopSignal,
+  fn: function (lineNumber) {
+    return {
+      line: lineNumber,
+      type: "fn",
+      scope: currentScope //this is the parent scope of the function
+    }
+  }
+}
 
 
 var codeToTree = function (code, fileName) {
@@ -151,10 +161,17 @@ var rawStart = function () {
 rawStart.info = "start"
 
 var rawEnd = function () { 
+  //callBag is your function plus your args
+
+  var first = callBag[0];
+  var rest = callBag.slice(1)
+  if (isFunction(first)) {//if is javascript function
+    first.apply(null, rest)
+  }
   console.log(callBag)
 
   callBagStack.pop()
-  callBag = last(callBagStack) 
+  callBag = last(callBagStack)
 
   callStack.pop()
   currentScope = last(callStack)
@@ -177,11 +194,8 @@ var rawGet = function (arg, scope) {
     } else if (arg in thumbs.hostScope) {
       lastResult = thumbs.hostScope[arg];
     } else {
-      lastResult = {
-        type: "string",
-        value: arg,
-        "parent": scope 
-      }
+      scope[arg] = {};
+      lastResult = arg
     }
   }
   return message
