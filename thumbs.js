@@ -1,5 +1,11 @@
 ;(function () {
 
+if (typeof console === "undefined" || console === null) {
+ console = {
+   log: function() {}
+ };
+}
+
 var ObjProto = Object.prototype
 var toString = ObjProto.toString
 var isFunction = function (obj) { return toString.call(obj) == '[object Function]'; }
@@ -13,15 +19,15 @@ var root = this;
 var thumbs;
 if (typeof exports !== 'undefined') {
   thumbs = exports;
-  thumbs.global = global
+  thumbs.hostScope = global
 } else {
   thumbs = root.thumbs = {};
-  thumbs.global = window
+  thumbs.hostScope = window
 }
 
-var globalScope = thumbs.scope = {thumbs: thumbs}
+var stopSignal = "abort. repeat. abort. :)";
+var globalScope = thumbs.scope = {thumbs: thumbs, "stop-signal": stopSignal}
 
-var killSignal = "abort. repeat. abort. :)";
 
 var codeToTree = function (code, fileName) {
   originalCode = "" +
@@ -75,12 +81,13 @@ var branchToLines = function (branch, lines) {
       lines.push(getCachedGetByteCode(twig)) 
       lines.push(rawAdd)
     } else if (isArray(twig)) {
-      branchToLines(twig, lines)    
+      branchToLines(twig, lines)
     }
   }
   lines.push(rawEnd);
   lines.push(rawAdd);
 }
+
 
 var branchesToLines = function (branches, lines) {
   lines = lines || [];
@@ -91,29 +98,36 @@ var branchesToLines = function (branches, lines) {
   }
 } 
 
+var treesToLinesMap = {}
+thumbs.hostScope.treesToLinesMap = treesToLinesMap
 var treeToLines = function (tree, fileName, codeLines) {
   var trees = [];
   separateFunctions(tree, trees);
-  var stop = [0, 0, killSignal]
+  var stop = [0, 0, "stop-signal"]
   trees.unshift([tree, stop]);
   console.log("debranched trees are")
   console.log(trees)
+  console.log("---")
   var braches;
   var lines = [];
   for (var i = 0; i < trees.length; i++) {
     branches = trees[i];
+    treesToLinesMap[i] = lines.length
     branchesToLines(branches, lines); 
   }
+  console.log("lines are")
+  var line;
+  var infos = []
+  for (lineIndex in lines) { infos.push(lines[lineIndex].info); }
+  console.log(infos);
+  console.log("---");
+
+  console.log("trees to lines map is")
+  console.log(treesToLinesMap);
+  console.log("---");
+
 
   return lines;
-  return;
-
-  codeLines = codeLines || [];
-  var childTree, lineNumber, fileName, getBytecode;
-  lineNumber = tree[0]
-  fileName = tree[1]
-  var lineNumberByteCode = getCachedLineNumberByteCode(lineNumber)
-  var fileNameByteCode =  getCachedFileNameByteCode(fileName)
 }
 
 
@@ -121,9 +135,10 @@ var currentLineNumber = 0;
 var currentFileName = "";
 var pc = 0;
 
-var callBag;
-var callBagStack = [];
+var callBag = [];
+var callBagStack = [callBag];
 var lastResult = null;
+var secondToLastResult = null;
 var currentScope = globalScope;
 var callStack = [currentScope];
 
@@ -132,28 +147,56 @@ var rawStart = function () {
   callBagStack.push(callBag);
   currentScope = {__parent: currentScope};
   callStack.push(currentScope);
-  return "starting function call"
 } 
+rawStart.info = "start"
+
 var rawEnd = function () { 
+  console.log(callBag)
+
   callBagStack.pop()
   callBag = last(callBagStack) 
+
   callStack.pop()
   currentScope = last(callStack)
-  return "ending function call"
+  lastResult = "boo"
 }
+rawEnd.info = "end"
 
-var rawGet = function (arg) {
+var rawGet = function (arg, scope) {
+  var message = "getting " + arg
+  scope = scope || currentScope
   lastResult = null;
-  return ("getting " + arg + "(" + pc + ")")
+  if (!isObject(scope)) return message;
+  if (scope.type == "fn") {
+    // no se todavia 
+  } else {
+    if (arg in scope) {
+      lastResult = scope[arg];
+    } else if (scope.__parent) {
+      rawGet(arg, scope.__parent) 
+    } else if (arg in thumbs.hostScope) {
+      lastResult = thumbs.hostScope[arg];
+    } else {
+      lastResult = {
+        type: "string",
+        value: arg,
+        "parent": scope 
+      }
+    }
+  }
+  return message
 }
+rawGet.info = "get"
 
 var rawAdd = function () { 
   callBag.push(lastResult);
-  return "adding to args"
 }
+rawAdd.info = "add"
 
 var rawSetLineNumber = function (lineNumber) { currentLineNumber = lineNumber; }
+rawSetLineNumber.info = "set-line-number"
 var rawSetFileName = function (fileName) { currentFileName = fileName }
+rawSetFileName.info = "set-file-name"
 
 var makeCachingSystem = function (fn, name) {
   //just caches the func, arg pair so i don't new up a bunch of arrays
@@ -162,14 +205,17 @@ var makeCachingSystem = function (fn, name) {
     if (arg in cache) {
       return cache[arg] 
     } else {
-      var ret = cache[arg] = function () { return name + "(" + arg + ")"}  //function () { fn(arg); }
+      var ret = cache[arg] = function () { 
+        fn(arg); 
+      }
+      ret.info = name + " " + arg
       return ret;
     }
   }
 }
 
-var getCachedLineNumberByteCode = makeCachingSystem(rawSetLineNumber, "setLineNumber")
-var getCachedFileNameByteCode = makeCachingSystem(rawSetFileName, "setFileName")
+var getCachedLineNumberByteCode = makeCachingSystem(rawSetLineNumber, "set-line-number")
+var getCachedFileNameByteCode = makeCachingSystem(rawSetFileName, "set-file-name")
 var getCachedGetByteCode = makeCachingSystem(rawGet, "get")
 
 
@@ -180,10 +226,16 @@ var run = function (code, fileName, scope) {
   while (true) {
     todo = codeLines[pc]
     if (!todo) break;
+    secondToLastResult = lastResult;
     ret = todo()
-    console.log(ret)
+    if (lastResult == stopSignal) {
+      lastResult = secondToLastResult;
+      console.log("aborting.")
+      break;
+    }
     pc += 1
   }
+  return lastResult
 }
 
 var runFile = function (file) {
@@ -191,7 +243,7 @@ var runFile = function (file) {
   var code = fs.readFileSync(file).toString();
   var ran = run(code) 
   return ran;
-}    
+} 
 
 thumbs.runScripts = runScripts
 thumbs.run = run //runs raw code
