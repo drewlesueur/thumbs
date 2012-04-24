@@ -94,8 +94,13 @@ var separateFunctions = function (tree, trees) {
       fileName = childTree[1];
       bagOfSand = [lineNumber, fileName, "fn", trees.length+1]; //we add one because we are going to be unshifting
       goldStatue = tree.splice(i, 1, bagOfSand)[0].slice(3);
+      lastGoldStatueBranch = last(goldStatue)
+     // lastLineNumber = lastGoldStatueBranch[0]
+     // lastFileName = lastGoldStatueBranch[1]
+     // goldStatue.push([lastLineNumber, lastFileName, "return"])
       trees.push(goldStatue); 
     } 
+    
     separateFunctions(childTree, trees);
   }
 }
@@ -121,8 +126,8 @@ var branchToLines = function (branch, lines) {
       branchToLines(twig, lines)
     }
   }
-  lines.push(rawCall);
   lines.push(rawEnd);
+  lines.push(rawCall);
   lines.push(rawAdd);
 }
 
@@ -134,6 +139,7 @@ var branchesToLines = function (branches, lines) {
     branch = branches[i]
     branchToLines(branch, lines)
   }
+  lines.push(rawReturn)
 } 
 
 var treesToLinesMap = {}
