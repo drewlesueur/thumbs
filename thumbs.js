@@ -29,7 +29,12 @@ var stopSignal = "abort. repeat. abort. :)";
 var globalScope = thumbs.scope = {
   thumbs: thumbs,
   "stop-signal": stopSignal,
-  fn: function (lineNumber) {
+  "do": function (fn) {
+    pc = fn.line  
+  },
+  fn: function (treeNumber) {
+    var lineNumber = treesToLinesMap[treeNumber]
+    //todo: pre compile that so I don't have to do it runtime.
     return {
       line: lineNumber,
       type: "fn",
@@ -37,7 +42,26 @@ var globalScope = thumbs.scope = {
     }
   }
 }
+var __slice = [].slice;
 
+
+var rawCall = function () {
+  //setting scope limitations for objects?
+  //should be able to get the scope of the function
+  // create new function with different scope
+  var first = callBag[0];
+  var rest = callBag.slice(1)
+  currentScope = {__parent: fn.scope}
+  callStack.push(currentScope);
+  lineStack.push(pc)
+  if (isFunction(first)) {//if is javascript function
+    first.apply(null, rest)
+  } else if (first.type == "fn") {
+    pc = fn.line - 1
+  }
+  console.log(callBag)
+}
+rawCall.info = "call"
 
 var codeToTree = function (code, fileName) {
   originalCode = "" +
@@ -88,12 +112,16 @@ var branchToLines = function (branch, lines) {
   for (var i = 2; i < branch.length; i++) {
     twig = branch[i]
     if (isString(twig) || isNumber(twig)) {
+      if (i == 2) {
+        lines.push(rawIsFirst) 
+      }
       lines.push(getCachedGetByteCode(twig)) 
       lines.push(rawAdd)
     } else if (isArray(twig)) {
       branchToLines(twig, lines)
     }
   }
+  lines.push(rawCall);
   lines.push(rawEnd);
   lines.push(rawAdd);
 }
@@ -109,7 +137,7 @@ var branchesToLines = function (branches, lines) {
 } 
 
 var treesToLinesMap = {}
-thumbs.hostScope.treesToLinesMap = treesToLinesMap
+var theFunctions = []
 var treeToLines = function (tree, fileName, codeLines) {
   var trees = [];
   separateFunctions(tree, trees);
@@ -146,58 +174,62 @@ var currentFileName = "";
 var pc = 0;
 
 var callBag = [];
-var callBagStack = [callBag];
+var callBagStack = [];
 var lastResult = null;
 var secondToLastResult = null;
 var currentScope = globalScope;
 var callStack = [currentScope];
+var lineStack = [0];
+
+var isFirst = false;
+var rawIsFirst = function () {
+  isFirst = true;
+}
+rawIsFirst.info = "first arg"
 
 var rawStart = function () {
-  callBag = []
   callBagStack.push(callBag);
-  currentScope = {__parent: currentScope};
-  callStack.push(currentScope);
+  callBag = []
 } 
 rawStart.info = "start"
 
 var rawEnd = function () { 
-  //callBag is your function plus your args
-
-  var first = callBag[0];
-  var rest = callBag.slice(1)
-  if (isFunction(first)) {//if is javascript function
-    first.apply(null, rest)
-  }
-  console.log(callBag)
-
-  callBagStack.pop()
-  callBag = last(callBagStack)
-
-  callStack.pop()
-  currentScope = last(callStack)
-  lastResult = "boo"
+  callBag = callBagStack.pop()
+  currentScope = callStack.pop()
+  pc = lineStack.pop()
 }
+
 rawEnd.info = "end"
 
 var rawGet = function (arg, scope) {
   var message = "getting " + arg
+  _isFirst = isFirst;
+  isFirst = false;
   scope = scope || currentScope
   lastResult = null;
-  if (!isObject(scope)) return message;
-  if (scope.type == "fn") {
+  if (!isObject(scope)) { 
+    throw new Error("no scope") // for now
+  } else if (arg - 0 == arg) {
+    return arg - 0;
+  } else if (arg[0] == "'" || last(arg[0]) == "'") {
+    return arg;
+  } else if (scope.type == "fn") {
     // no se todavia 
+  } else if (arg in scope) {
+    lastResult = scope[arg];
+  } else if (scope.__parent) {
+    rawGet(arg, scope.__parent) 
+  } else if (arg in thumbs.hostScope) {
+    lastResult = thumbs.hostScope[arg];
+  } else if (scope == currentScope && isFirst == false) {
+    lastResult = arg
   } else {
-    if (arg in scope) {
-      lastResult = scope[arg];
-    } else if (scope.__parent) {
-      rawGet(arg, scope.__parent) 
-    } else if (arg in thumbs.hostScope) {
-      lastResult = thumbs.hostScope[arg];
-    } else {
-      scope[arg] = {};
-      lastResult = arg
+    lastResult = function (val) {
+      scope[arg] == val 
+      return val;
     }
   }
+  //todo: php-like chain setting!
   return message
 }
 rawGet.info = "get"
