@@ -1,9 +1,7 @@
 ;(function () {
 
 if (typeof console === "undefined" || console === null) {
- console = {
-   log: function() {}
- };
+  console = { log: function() {} };
 }
 
 var ObjProto = Object.prototype
@@ -46,7 +44,6 @@ var makeThumbsFunction = function (treeNumber, scope) {
   }
 }
 
-
 var rawSet = function (name, value, scope) {
   scope = scope || currentScope;
   if (isObject(scope)) {
@@ -56,12 +53,13 @@ var rawSet = function (name, value, scope) {
   }
 }
 
+var rawDo = function (fn, scope) {
+  callThumbsFunction(fn) 
+}
 var globalScope = thumbs.scope = {
   thumbs: thumbs,
   "stop-signal": stopSignal,
-  "do": function (fn) {
-
-  },
+  "do": rawDo,
   fn: makeThumbsFunction,
   set: rawSet
 }
@@ -92,20 +90,17 @@ var rawCall = function (scope) {
   var first = callBag[0];
   var rest = callBag.slice(1)
   if (isFunction(first)) {//if is javascript function
-    first.apply(null, rest, currentScope)
+    rest.push(currentScope)
+    first.apply(null, currentScope)
   } else if (isThumbsFunction(first)) {
     callStack.push(currentScope);
     currentScope = {
       '--parent-scope': first.scope,
       '--calling-scope': currentScope,
       '--args': rest,
-      '@': rest[0]
     }
-    if (isNumber(fn.line)) {
-      pc = fn.line - 1
-    } else if (isFunction(fn.line)) {
-      fn.line.apply(null, rest, currentScope)  //a function that sets its own pc
-    }
+    currentScope[symbols.first-arg] = rest[0]
+    pc = fn.line - 1
   }
   console.log(callBag)
 }
@@ -127,7 +122,6 @@ var symbols = {
   "inline-call": ";",
   "interpolated-string": "$"
 }
-
 
 var rawReturn = function () {
   callBag = callBagStack.pop(); 
@@ -153,6 +147,7 @@ var codeToTree = function (code, fileName) {
 
 var id = 0;
 var getId = function (prefix) {
+  prefix = prefix || ""
   id += 1;
   return prefix + id;
 }
@@ -170,17 +165,8 @@ var separateFunctions = function (tree, trees) {
       lastGoldStatueBranch = last(goldStatue)
       trees.push(goldStatue); 
     } 
-    
     separateFunctions(childTree, trees);
   }
-}
-
-var parsedIsStringLiteral = function (twig) {
-  return twig.charAt(0) == symbols.string
-}
-
-var parsedJustString = function (word) {
-  return word.subString(1) 
 }
 
 var branchToLines = function (branch, lines) {
