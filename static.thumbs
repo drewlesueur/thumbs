@@ -1,0 +1,36 @@
+person.0.name gracie
+
+person,index.name gracie
+
+
+object,prop
+
+index 0
+people,index.name gracie
+
+
+
+((scope people') index) name') gracie')
+
+x drew
+x aimee
+
+x 0
+x add 1 x
+
+
+
+person.x
+person :
+person.name drew
+
+people,index.name drew
+
+(access 'people index 'name)
+
+access . first args, last
+  current first 
+  loop args . arg
+    current current,arg
+
+
