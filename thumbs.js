@@ -28,6 +28,8 @@ if (typeof exports !== 'undefined') {
 
 var stopSignal = "abort. repeat. abort. :)";
 
+//todo: cache getting of default functions like 'set' and 'get-args'
+
 var makeThumbsFunction = function (treeNumber, scope) {
   scope = scope || currentScope
   var lineNumberOrFunc;
@@ -44,29 +46,31 @@ var makeThumbsFunction = function (treeNumber, scope) {
   }
 }
 
+
+var rawSet = function (name, value, scope) {
+  scope = scope || currentScope;
+  if (isObject(scope)) {
+    scope[name] = value;
+  } else if (isThumbsFunction(scope)){
+    callThumbsFunction([scope, name, value]);   
+  }
+}
+
 var globalScope = thumbs.scope = {
   thumbs: thumbs,
   "stop-signal": stopSignal,
   "do": function (fn) {
 
   },
-  fn: makeThumbsFunction 
+  fn: makeThumbsFunction,
+  set: rawSet
 }
-
 
 var rawAdd = function (opts, scope) { 
   scope = scope || currentScope
-  var settingScope = scope
-  if (callBag.length == 0 && !isAnyFunction(lastResult) && opts && opts['var-name']) {
-    newScope = {'--parent-scope': scope, 'var-name': opts['var-name'] }
-    var varName = opts['var-name']
-    lastResult = makeThumbsFunction('call-func-and-set-to-me', newScope)
-  }
   callBag.push(lastResult);
 }
 rawAdd.info = "add"
-
-
 
 var isThumbsFunction = function (fn) {
   // fn?.type == "fn"
@@ -76,26 +80,6 @@ var isThumbsFunction = function (fn) {
 var rawNoOp = function () {}
 rawNoOp.info = "noop"
 
-var addInternalThumbsLines = function (lines) {
-  treesToLinesMap['call-func-and-set-to-me'] = lines.length
-  lines.concat([
-    rawStart,
-    function () {
-      callBag.push(rawSet)
-    },
-    function () {
-      rawGet('var-name');
-    },
-    rawAdd,
-    rawStart,
-    rawGet2('--args'),
-    rawAdd,
-    function () {
-      args = callBag
-      callThumbsFunction()
-    }
-  ])
-}
 var callThumbsFunction = function (/*args...*/) { //different from callThumbsFuncitonFromJs (not implemented yet)
   var args; args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
   rawStart();
@@ -107,16 +91,16 @@ var rawCall = function (scope) {
   scope = scope || currentScope
   var first = callBag[0];
   var rest = callBag.slice(1)
-  callStack.push(currentScope);
-  currentScope = {
-    '--parent-scope': fn.scope,
-    '--calling-scope': currentScope,
-    '--args': rest
-  }
   if (isFunction(first)) {//if is javascript function
     first.apply(null, rest, currentScope)
-    rawReturn();
   } else if (isThumbsFunction(first)) {
+    callStack.push(currentScope);
+    currentScope = {
+      '--parent-scope': first.scope,
+      '--calling-scope': currentScope,
+      '--args': rest,
+      '@': rest[0]
+    }
     if (isNumber(fn.line)) {
       pc = fn.line - 1
     } else if (isFunction(fn.line)) {
@@ -127,6 +111,24 @@ var rawCall = function (scope) {
 }
 rawCall.info = "call"
 
+var symbols = {
+  "access": ".",
+  "function": "&",
+  "terminal-assign": ".",
+  "assign": "=",
+  "object": ":",
+  "access": ".",
+  "access-variable": ",",
+  "array": ",",
+  "no-arg-function": "!",
+  "string": "'",
+  "string-literal": '"',
+  "first-arg": "@",
+  "inline-call": ";",
+  "interpolated-string": "$"
+}
+
+
 var rawReturn = function () {
   callBag = callBagStack.pop(); 
   currentScope = callStack.pop()
@@ -136,13 +138,13 @@ rawReturn.info = "return"
 
 var codeToTree = function (code, fileName) {
   originalCode = "" +
-    "double . x" +
+    "double && x" +
     " mult x 2" +
-    "ten double 5"
+    "ten = double 5"
 
   return [ 0, fileName, "do",
-    [0, fileName, ".", 
-      [0, fileName, "double", [0, fileName, ".", [0, fileName, "args", "x"],
+    [0, fileName, "&", 
+      [0, fileName, "set", "'double", [0, fileName, "&", [0, fileName, "get-args", "'x"],
           [1, fileName, "mult", "x", "2"]]],
       [2, fileName, "ten", "double", "5"]
     ]
@@ -160,7 +162,7 @@ var separateFunctions = function (tree, trees) {
   var childTree, lineNumber, fileName, bagOfSand, goldStatue;
   for (var i = 2; i < tree.length; i++) {
     childTree = tree[i];
-    if (childTree[2] == ".") {
+    if (childTree[2] == symbols["function"]) {
       lineNumber = childTree[0];
       fileName = childTree[1];
       bagOfSand = [lineNumber, fileName, "fn", trees.length+1]; //we add one because we are going to be unshifting
@@ -171,6 +173,14 @@ var separateFunctions = function (tree, trees) {
     
     separateFunctions(childTree, trees);
   }
+}
+
+var parsedIsStringLiteral = function (twig) {
+  return twig.charAt(0) == symbols.string
+}
+
+var parsedJustString = function (word) {
+  return word.subString(1) 
 }
 
 var branchToLines = function (branch, lines) {
@@ -185,8 +195,12 @@ var branchToLines = function (branch, lines) {
     opts = {}
     twig = branch[i]
     if (isString(twig) || isNumber(twig)) {
-      lines.push(rawGet2(twig, opts)) //rawGet
-      lines.push(rawAdd2({'var-name': twig})) //rawAdd
+      if (twig.charAt(0) == "'") {
+        lines.push(rawGetForString2(twig.subString(1)));
+      } else {
+        lines.push(rawGet2(twig, opts)) //rawGet
+      }
+      lines.push(rawAdd) //rawAdd
     } else if (isArray(twig)) {
       branchToLines(twig, lines)
     }
@@ -234,7 +248,7 @@ var treeToLines = function (tree, fileName, codeLines) {
   console.log(treesToLinesMap);
   console.log("---");
 
-  addInternalThumbsLines(lines);
+  // addInternalThumbsLines(lines);
   return lines;
 }
 
@@ -258,6 +272,10 @@ var rawStart = function () {
 rawStart.info = "start"
 
 
+var rawGetForString = function (arg) {
+  lastResult = arg
+}
+rawGetForString.info = "get for string"
 
 var rawGet = function (arg, opts, scope) {
   var message = "getting " + arg
@@ -265,28 +283,18 @@ var rawGet = function (arg, opts, scope) {
   lastResult = null;
   if (!isObject(scope)) { 
     throw new Error("no scope") // for now
-  } else if (arg - 0 == arg) {
+  } else if (arg - 0 == arg && scope == currentScope) { //??
     lastResult = arg - 0;
-  } else if (arg[0] == "'" || last(arg[0]) == "'") {
-    lastResult = arg;
   } else if (isThumbsFunction(scope)) {
-    // no se todavia 
+    callThumbsFunction([scope, arg]);
+    //here you are creating new scope and it will return
   } else if (arg in scope) {
     lastResult = scope[arg];
   } else if (scope['--parent-scope']) {
     rawGet(arg, scope['--parent-scope']) 
   } else if (arg in thumbs.hostScope) {
     lastResult = thumbs.hostScope[arg];
-  } else if (scope == currentScope && _isFirst == false) {
-    lastResult = arg
-  } else {
-    lastResult = function (val) {
-      scope[arg] == val 
-      return val;
-    }
   }
-
-  isFirst = false;
   //todo: php-like chain setting!
   return message
 }
@@ -296,9 +304,6 @@ rawGet.info = "get"
 var isAnyFunction = function (fn) {
   return (isFunction(fn) || isThumbsFunction(fn))
 }
-
-
-
 
 var rawSetLineNumber = function (lineNumber) { currentLineNumber = lineNumber; }
 rawSetLineNumber.info = "set-line-number"
@@ -326,6 +331,7 @@ var makeCachingSystem = function (fn, name) {
 var rawSetLineNumber2 = makeCachingSystem(rawSetLineNumber, "set-line-number")
 var rawSetFileName2 = makeCachingSystem(rawSetFileName, "set-file-name")
 var rawGet2 = makeCachingSystem(rawGet, "get")
+var rawGetForString2 = makeCachingSystem(rawGetForString, "get-for-string")
 var rawAdd2 = makeCachingSystem(rawAdd, "add")
 
 var run = function (code, fileName, scope) {
