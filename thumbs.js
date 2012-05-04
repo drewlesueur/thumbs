@@ -109,7 +109,6 @@ var rawCall = function (scope) {
   scope = scope || currentScope
   var first = callBag[0];
   var rest = callBag.slice(1)
-  callBag = callBagStack.pop(); 
   if (isFunction(first)) {//if is javascript function
     lastResult = first.apply(null, rest)
     lastResult
@@ -188,6 +187,10 @@ var separateFunctions = function (tree, trees) {
   }
 }
 
+var rawEnd = function () {
+  callBag = callBagStack.pop(); 
+}
+rawEnd.info = "end"
 var branchToLines = function (branch, lines) {
   var lineNumber = branch[0]
   var fileName = branch[1]
@@ -209,6 +212,7 @@ var branchToLines = function (branch, lines) {
     }
   }
   lines.push(rawCall);
+  lines.push(rawEnd);
   lines.push(rawAdd);
 }
 
