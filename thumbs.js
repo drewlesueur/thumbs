@@ -4,14 +4,13 @@ if (typeof console === "undefined" || console === null) {
   console = { log: function() {} };
 }
 
-var ObjProto = Object.prototype
-var toString = ObjProto.toString
-var isFunction = function (obj) { return toString.call(obj) == '[object Function]'; }
-var isObject = function (obj) { return obj === Object(obj); }
-var isArray = Array.isArray || function(obj) { return toString.call(obj) == '[object Array]'; };
-var isString = function(obj) { return toString.call(obj) == '[object String]'; };
-var isNumber = function(obj) { return toString.call(obj) == '[object Number]'; };
-var last = function(arr) {return arr[arr.length - 1]}
+var isFunction = _.isFunction;
+var isObject = _.isObject;
+var isArray = _.isArray;
+var isString = _.isString;
+var isNumber = _.isNumber;
+var last = _.last;
+var each = _.each;
 var __slice = [].slice;
 
 var root = this;
@@ -44,16 +43,17 @@ var makeThumbsFunction = function (treeNumber, scope) {
   }
 }
 
-var rawSet = function (name, value, scope) {
-  scope = scope || currentScope;
+var rawSet = function (name, value) {
+  scope = currentScope;
   if (isObject(scope)) {
     scope[name] = value;
+    return value
   } else if (isThumbsFunction(scope)){
     callThumbsFunction([scope, name, value]);   
   }
 }
 
-var rawDo = function (fn, scope) {
+var rawDo = function (fn) {
   callThumbsFunction(fn) 
 }
 
@@ -62,7 +62,26 @@ var globalScope = thumbs.scope = {
   "stop-signal": stopSignal,
   "do": rawDo,
   fn: makeThumbsFunction,
-  set: rawSet
+  set: rawSet,
+  mult: function (a, b) { 
+    return a * b 
+  },
+  "get-args": function () {
+    //this could maybe be more compiled. thing other arguments to fn
+    var args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+    var oldPc = pc
+    var startSettingPc = finalLines.length
+    each(args, function (arg, i) {
+      finalLines.push(function () { 
+        rawSet(arg, currentScope['--args'][i])
+      })  
+      // lines.push ! raw-set arg current-scope.--args,i
+    })
+    finalLines.push(function () {
+      pc = oldPc;
+    })
+    pc = startSettingPc - 1
+  }
 }
 
 var rawAdd = function (opts, scope) { 
@@ -82,7 +101,7 @@ rawNoOp.info = "noop"
 var callThumbsFunction = function (/*args...*/) { //different from callThumbsFuncitonFromJs (not implemented yet)
   var args; args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
   rawStart();
-  callBag.concat(args)
+  callBag = args
   rawCall();
 }
 
@@ -90,9 +109,10 @@ var rawCall = function (scope) {
   scope = scope || currentScope
   var first = callBag[0];
   var rest = callBag.slice(1)
+  callBag = callBagStack.pop(); 
   if (isFunction(first)) {//if is javascript function
-    rest.push(currentScope)
-    first.apply(null, currentScope)
+    lastResult = first.apply(null, rest)
+    lastResult
   } else if (isThumbsFunction(first)) {
     currentScope["--pc"] = pc;
     callStack.push(currentScope);
@@ -101,10 +121,9 @@ var rawCall = function (scope) {
       '--calling-scope': currentScope,
       '--args': rest,
     }
-    currentScope[symbols.first-arg] = rest[0]
-    pc = fn.line - 1
+    currentScope[symbols["first-arg"]] = rest[0]
+    pc = first.line - 1
   }
-  console.log(callBag)
 }
 rawCall.info = "call"
 
@@ -126,7 +145,6 @@ var symbols = {
 }
 
 var rawReturn = function () {
-  callBag = callBagStack.pop(); 
   currentScope = callStack.pop()
   pc = currentScope["--pc"]
 }
@@ -138,11 +156,11 @@ var codeToTree = function (code, fileName) {
     " mult x 2" +
     "ten = double 5"
 
-  return [ 0, fileName, "do",
-    [0, fileName, "&", 
-      [0, fileName, "set", "'double", [0, fileName, "&", [0, fileName, "get-args", "'x"],
-          [1, fileName, "mult", "x", "2"]]],
-      [2, fileName, "ten", "double", "5"]
+  return ["do",
+    ["&", 
+      ["set", "'double", ["&", ["get-args", "'x"],
+          ["mult", "x", "2"]]],
+      ["set", "'ten", ["double", "5"]]
     ]
   ]
 }
@@ -157,17 +175,16 @@ var getId = function (prefix) {
 var separateFunctions = function (tree, trees) {
   var trees = trees || [];
   var childTree, lineNumber, fileName, bagOfSand, goldStatue;
-  for (var i = 2; i < tree.length; i++) {
+  for (var i = 0; i < tree.length; i++) {
     childTree = tree[i];
-    if (childTree[2] == symbols["function"]) {
-      lineNumber = childTree[0];
-      fileName = childTree[1];
-      bagOfSand = [lineNumber, fileName, "fn", trees.length+1]; //we add one because we are going to be unshifting
-      goldStatue = tree.splice(i, 1, bagOfSand)[0].slice(3);
-      lastGoldStatueBranch = last(goldStatue)
+    if (childTree[0] == symbols["function"]) {
+      bagOfSand = ["fn", trees.length+1]; //we add one because we are going to be unshifting
+      goldStatueWrapper = tree.splice(i, 1, bagOfSand)
+      goldStatue = goldStatueWrapper[0].slice(1) 
+      childTree = goldStatue
       trees.push(goldStatue); 
     } 
-    separateFunctions(childTree, trees);
+    if (isArray(childTree)) separateFunctions(childTree, trees);
   }
 }
 
@@ -175,18 +192,16 @@ var branchToLines = function (branch, lines) {
   var lineNumber = branch[0]
   var fileName = branch[1]
   lines.push(rawStart)
-  lines.push(rawSetLineNumber2(lineNumber))
-  lines.push(rawSetFileName2(fileName))
+  //lines.push(rawSetLineNumber2(lineNumber))
+  //lines.push(rawSetFileName2(fileName))
   var twig;
-  var opts;
-  for (var i = 2; i < branch.length; i++) {
-    opts = {}
+  for (var i = 0; i < branch.length; i++) {
     twig = branch[i]
     if (isString(twig) || isNumber(twig)) {
-      if (twig.charAt(0) == "'") {
-        lines.push(rawGetForString2(twig.subString(1)));
+      if (twig.charAt && twig.charAt(0) == "'") {
+        lines.push(rawGetForString2(twig.substring(1)));
       } else {
-        lines.push(rawGet2(twig, opts)) //rawGet
+        lines.push(rawGet2(twig)) //rawGet
       }
       lines.push(rawAdd) //rawAdd
     } else if (isArray(twig)) {
@@ -210,25 +225,24 @@ var branchesToLines = function (branches, lines) {
 
 var treesToLinesMap = {}
 var theFunctions = []
-var treeToLines = function (tree, fileName, codeLines) {
+var treeToLines = function (tree, fileName, finalLines) {
   var trees = [];
   separateFunctions(tree, trees);
-  var stop = [0, 0, "stop-signal"]
+  var stop = ["stop-signal"]
   trees.unshift([tree, stop]);
   console.log("debranched trees are")
   console.log(trees)
   console.log("---")
   var braches;
-  var lines = [];
   for (var i = 0; i < trees.length; i++) {
     branches = trees[i];
-    treesToLinesMap[i] = lines.length
-    branchesToLines(branches, lines); 
+    treesToLinesMap[i] = finalLines.length
+    branchesToLines(branches, finalLines); 
   }
   console.log("lines are")
   var line;
   var infos = []
-  for (lineIndex in lines) { infos.push(lines[lineIndex].info); }
+  for (lineIndex in finalLines) { infos.push(finalLines[lineIndex].info); }
   console.log(infos);
   console.log("---");
 
@@ -236,8 +250,8 @@ var treeToLines = function (tree, fileName, codeLines) {
   console.log(treesToLinesMap);
   console.log("---");
 
-  // addInternalThumbsLines(lines);
-  return lines;
+  // addInternalThumbsLines(finalLines);
+  return finalLines;
 }
 
 var currentLineNumber = 0;
@@ -251,20 +265,18 @@ var secondToLastResult = null;
 var currentScope = globalScope;
 var callStack = [currentScope];
 
-
 var rawStart = function () {
   callBagStack.push(callBag);
   callBag = []
 } 
 rawStart.info = "start"
 
-
 var rawGetForString = function (arg) {
   lastResult = arg
 }
 rawGetForString.info = "get for string"
 
-var rawGet = function (arg, opts, scope) {
+var rawGet = function (arg, scope) {
   var message = "getting " + arg
   scope = scope || currentScope
   lastResult = null;
@@ -321,12 +333,13 @@ var rawGet2 = makeCachingSystem(rawGet, "get")
 var rawGetForString2 = makeCachingSystem(rawGetForString, "get-for-string")
 var rawAdd2 = makeCachingSystem(rawAdd, "add")
 
+var finalLines = []
 var run = function (code, fileName, scope) {
   var codeTree = codeToTree(code, fileName);
-  var codeLines = treeToLines(codeTree, fileName);
+  treeToLines(codeTree, fileName, finalLines);
   var ret;
   while (true) {
-    todo = codeLines[pc]
+    todo = finalLines[pc]
     if (!todo) break;
     secondToLastResult = lastResult;
     ret = todo()
@@ -337,6 +350,7 @@ var run = function (code, fileName, scope) {
     }
     pc += 1
   }
+  console.log("The last result is " + lastResult)
   return lastResult
 }
 
