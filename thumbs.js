@@ -44,6 +44,7 @@ var makeThumbsFunction = function (treeNumber, scope) {
 }
 
 var rawSet = function (name, value) {
+  //todo do a get to see which scope you should set in
   scope = currentScope;
   if (isObject(scope)) {
     scope[name] = value;
