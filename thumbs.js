@@ -54,6 +54,16 @@ var rawSet = function (name, value) {
   }
 }
 
+var rawSetLocal = function (name, value) {
+  scope = currentScope;
+  if (isObject(scope)) {
+    scope[name] = value;
+    return value
+  } else if (isThumbsFunction(scope)){
+    callThumbsFunction([scope, name, value]);   
+  }
+}
+
 var rawDo = function (fn) {
   callThumbsFunction(fn) 
 }
@@ -66,6 +76,22 @@ var globalScope = thumbs.scope = {
   set: rawSet,
   mult: function (a, b) { 
     return a * b 
+  },
+  "get-args--deprecated": function () {
+    //this could maybe be more compiled. thing other arguments to fn
+    var args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+    var oldPc = pc
+    var startSettingPc = finalLines.length
+    each(args, function (arg, i) {
+      finalLines.push(function () { 
+        rawSet(arg, currentScope['--args'][i])
+      })  
+      // lines.push ! raw-set arg current-scope.--args,i
+    })
+    finalLines.push(function () {
+      pc = oldPc;
+    })
+    pc = startSettingPc - 1
   },
   "get-args": function () {
     //this could maybe be more compiled. thing other arguments to fn
