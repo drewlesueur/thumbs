@@ -327,9 +327,6 @@ var treeToLines = function (tree, fileName, finalLines) {
   }
   console.log("lines are")
   var line;
-  var infos = []
-  for (lineIndex in finalLines) { infos.push(finalLines[lineIndex].info); }
-  thumbsDebug.renderDebug(infos)
 
   console.log("---");
 
@@ -341,24 +338,33 @@ var treeToLines = function (tree, fileName, finalLines) {
   return finalLines;
 }
 
-var thumbsDebug = (function () {
-  var renderDebug =  function (infos) {
+window.thumbsDebug = (function () {
+  var self = {}
+  self.lineHeight = 15;
+  var renderDebug = self.renderDebug =  function (finalLines) {
+    var infos = []
+    for (lineIndex in finalLines) { infos.push(finalLines[lineIndex].info); }
      prettyPrinted = prettyPrintInfos(infos)
      addCodeSheetIfNotThere();
      fillLines(prettyPrinted)
   }
-  var highlightLine = function () {
-     
+  var highlightLine = self.highlightLine = function (pc) {
+    var y = self.lineHeight * pc;
+    line.css("top", y + "px")
   }
   var codeSheet;
   var line;
+  var pre;
   var fillLines = function (infos) {
-    codeSheet.find('textarea').text(infos.join("\n")) 
+    pre.text(infos.join("\n")) 
   }
   var addCodeSheetIfNotThere = function () {
     if (codeSheet) return;
-    codeSheet = $('<div><textarea class="thumbs" style="background-color: transparent; font-size: 12px; width:300px; height: 500px; display: block;"></textarea></div>')
-    line = $('<div style="position: absolute; top: 0; left: 0"></div>')
+    codeSheet = $('<div style="position: relative;"></div>')
+    pre = $('<pre class="thumbs" style="background-color: transparent; font-size: 12px; width:300px; height: 500px; display: block;"></pre>')
+    line = $('<div style="background-color: rgba(0,0,200, 0.25); width: 300px; height: '+self.lineHeight+'px; position: absolute; top: 0; left: 0"></div>')
+    codeSheet.append(line)
+    codeSheet.append(pre)
     $(document.body).append(codeSheet)
 
   }
@@ -383,10 +389,7 @@ var thumbsDebug = (function () {
     }
     return space;
   }
-
-  return {
-    renderDebug: renderDebug
-  }
+  return self
 })();
 
 
@@ -451,22 +454,49 @@ var finalLines = []
 var run = function (code, fileName, scope) {
   var codeTree = codeToTree(code, fileName);
   treeToLines(codeTree, fileName, finalLines);
-  var ret;
-  while (true) {
-    todo = finalLines[pc]
-    if (!todo) break;
-    secondToLastResult = lastResult;
-    ret = todo()
-    if (lastResult == stopSignal) {
-      lastResult = secondToLastResult;
-      console.log("aborting.")
-      break;
+  thumbsDebug.renderDebug(finalLines)
+
+    var breakSignal = "BREAAAK!"
+    var execLine = function () {
+      thumbsDebug.highlightLine(pc) // make this optional
+      todo = finalLines[pc]
+      if (!todo) return breakSignal;
+      secondToLastResult = lastResult;
+      todo()
+      if (lastResult == stopSignal) {
+        lastResult = secondToLastResult;
+        console.log("aborting.")
+        return breakSignal;
+      }
+      pc += 1
+      thumbsDebug.highlightLine(pc) // make this optional
     }
-    pc += 1
-  }
-  console.log("The last result is:")
-  console.log(lastResult)
-  return lastResult
+
+    var runFast = false; //todo: change this to an argument
+
+    var runSlowWrapper = function () {
+      var execed = execLine();
+      if (execed == breakSignal) {
+        finish()
+      } else {
+        setTimeout(runSlowWrapper, 100)
+      }
+    }
+    
+    var finish = function () {
+      console.log("The last result is:")
+      console.log(lastResult)
+      return lastResult
+    }
+
+    if (runFast) {
+      while (true) {
+        if (execLine() == breakSignal) break;
+      }
+      return finish()
+    } else {
+      runSlowWrapper() 
+    }
 }
 
 var runFile = function (file) {
