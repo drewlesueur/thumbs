@@ -133,22 +133,6 @@ var globalScope = thumbs.scope = {
     })
     pc = startSettingPc - 1
   },
-  "get-args": function () {
-    //this could maybe be more compiled. thing other arguments to fn
-    var args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-    var oldPc = pc
-    var startSettingPc = finalLines.length
-    each(args, function (arg, i) {
-      finalLines.push(function () { 
-        rawSet(arg, currentScope['--args'][i])
-      })  
-      // lines.push ! raw-set arg current-scope.--args,i
-    })
-    finalLines.push(function () {
-      pc = oldPc;
-    })
-    pc = startSettingPc - 1
-  },
   ",": function () { //this is a list
     var args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
     return args
@@ -221,27 +205,8 @@ var rawReturn = function () {
 rawReturn.info = "return"
 
 var codeToTree = function (code, fileName) {
-  originalCode = "" +
-    "double = * x" +
-    " mult x 2" +
-    "ten = double 5"
-
-  return ["do",
-    ["*main-func", 
-      //["set", "'loop", ["*", 
-      //  ["set", "'list", ["get", "'0", "--args"] ],
-      //  ["say", "list"],
-      //  ["say", "'the list is:"],
-      //]],
-      //["loop",[",", "'hello", "'world"]],
-      //["set", "'my-list", [",", "'hello","'world" ]],
-      ["say", "'yo world!!"],
-      ["set", "'double", ["*double",
-          ["mult", "@", "2"]]],
-      ["say", "'yo world2!!"],
-      ["set", "'ten", ["double", "5"]],
-    ]
-  ]
+  //todo: return an a lisp-like array based off the code.
+  //
 }
 
 var id = 0;
@@ -260,6 +225,7 @@ var separateFunctions = function (tree, trees) {
       var name = childTree[0].substring(1) 
       var args = childTree[1]
       bagOfSand = ["fn", trees.length+1, "'" + name]; //we add one because we are going to be unshifting
+      //TODO: bagOfSand should be a js function that calls makethumbsfunction
       goldStatueWrapper = tree.splice(i, 1, bagOfSand)
       goldStatue = goldStatueWrapper[0].slice(1) 
       childTree = goldStatue
@@ -272,19 +238,21 @@ var separateFunctions = function (tree, trees) {
 var rawEnd = function () {
   callBag = callBagStack.pop(); 
 }
+
 rawEnd.info = "end"
 var branchToLines = function (branch, lines) {
   var lineNumber = branch[0]
   var fileName = branch[1]
   lines.push(rawStart)
-  //lines.push(rawSetLineNumber2(lineNumber))
-  //lines.push(rawSetFileName2(fileName))
   var twig;
   for (var i = 0; i < branch.length; i++) {
     twig = branch[i]
     if (isString(twig) || isNumber(twig)) {
       if (twig.charAt && twig.charAt(0) == "'") {
         lines.push(rawGetForString2(twig.substring(1)));
+        //TODO: this should probably be compiled so that you
+        //don't have to call this when running
+        //like maybe push the actual string
       } else {
         lines.push(rawGet2(twig)) //rawGet
       }
@@ -298,7 +266,6 @@ var branchToLines = function (branch, lines) {
   lines.push(rawAdd);
 }
 
-
 var branchesToLines = function (branches, lines) {
   lines = lines || [];
   var branch;
@@ -311,29 +278,19 @@ var branchesToLines = function (branches, lines) {
 
 var treesToLinesMap = {}
 var theFunctions = []
+
 var treeToLines = function (tree, fileName, finalLines) {
   var trees = [];
   separateFunctions(tree, trees);
   var stop = ["stop-signal"]
   trees.unshift([tree, stop]);
-  console.log("debranched trees are")
-  console.log(trees)
-  console.log("---")
   var braches;
   for (var i = 0; i < trees.length; i++) {
     branches = trees[i];
     treesToLinesMap[i] = finalLines.length
     branchesToLines(branches, finalLines); 
   }
-  console.log("lines are")
   var line;
-
-  console.log("---");
-
-  console.log("trees to lines map is")
-  console.log(treesToLinesMap);
-  console.log("---");
-
   // addInternalThumbsLines(finalLines);
   return finalLines;
 }
@@ -392,7 +349,6 @@ window.thumbsDebug = (function () {
   return self
 })();
 
-
 var currentLineNumber = 0;
 var currentFileName = "";
 var pc = 0;
@@ -415,16 +371,9 @@ var rawGetForString = function (arg) {
 }
 rawGetForString.info = "get for string"
 
-
-
 var isAnyFunction = function (fn) {
   return (isFunction(fn) || isThumbsFunction(fn))
 }
-
-var rawSetLineNumber = function (lineNumber) { currentLineNumber = lineNumber; }
-rawSetLineNumber.info = "set-line-number"
-var rawSetFileName = function (fileName) { currentFileName = fileName }
-rawSetFileName.info = "set-file-name"
 
 var makeCachingSystem = function (fn, name) {
   //just caches the func, arg pair so i don't new up a bunch of arrays
@@ -444,59 +393,75 @@ var makeCachingSystem = function (fn, name) {
   }
 }
 
-var rawSetLineNumber2 = makeCachingSystem(rawSetLineNumber, "set-line-number")
-var rawSetFileName2 = makeCachingSystem(rawSetFileName, "set-file-name")
 var rawGet2 = makeCachingSystem(rawGet, "get")
 var rawGetForString2 = makeCachingSystem(rawGetForString, "get-for-string")
 var rawAdd2 = makeCachingSystem(rawAdd, "add")
 
-var finalLines = []
-var run = function (code, fileName, scope) {
-  var codeTree = codeToTree(code, fileName);
-  treeToLines(codeTree, fileName, finalLines);
-  thumbsDebug.renderDebug(finalLines)
-
-    var breakSignal = "BREAAAK!"
-    var execLine = function () {
-      thumbsDebug.highlightLine(pc) // make this optional
-      todo = finalLines[pc]
-      if (!todo) return breakSignal;
-      secondToLastResult = lastResult;
-      todo()
-      if (lastResult == stopSignal) {
-        lastResult = secondToLastResult;
-        console.log("aborting.")
-        return breakSignal;
-      }
-      pc += 1
-      thumbsDebug.highlightLine(pc) // make this optional
+var execLineMaker = function (finalLines, options) {
+  var execLine = function () {
+    todo = finalLines[pc]
+    if (!todo) return breakSignal;
+    secondToLastResult = lastResult;
+    todo()
+    if (lastResult == stopSignal) {
+      lastResult = secondToLastResult;
+      return breakSignal;
     }
+    pc += 1
+  }
+  if (options.debug) execLine = highlightLineWrapperMaker(execLine)
+  return execLine;
+}
 
-    var runFast = false; //todo: change this to an argument
+var breakSignal = "BREAAAK!"
 
-    var runSlowWrapper = function () {
-      var execed = execLine();
-      if (execed == breakSignal) {
-        finish()
-      } else {
-        setTimeout(runSlowWrapper, 100)
-      }
-    }
-    
-    var finish = function () {
-      console.log("The last result is:")
-      console.log(lastResult)
-      return lastResult
-    }
+var finishRunning = function () {
+  console.log("The last result is:")
+  console.log(lastResult)
+  return lastResult
+}
 
-    if (runFast) {
-      while (true) {
-        if (execLine() == breakSignal) break;
-      }
-      return finish()
+var runSlowExecLineMaker = function (execLine) {
+  return function () {
+    var execed = execLine();
+    if (execed == breakSignal) {
+      finishRunning()
     } else {
-      runSlowWrapper() 
+      setTimeout(runSlowExecLine, 100)
     }
+  }
+}
+
+var execLines = function (execLine, debug) {
+  if (!debug) {
+    while (true) {
+      if (execLine() == breakSignal) break;
+    }
+    return finishRunning()
+  } else {
+    runSlowExecLine = runSlowExecLineMaker(execLine)
+    runSlowExecLine() 
+  }
+}
+
+var highlightLineWrapperMaker = function (execLine) {
+  return function () {
+    thumbsDebug.highlightLine(pc)
+    execLine()
+    thumbsDebug.highlightLine(pc)
+  }
+}
+
+var run = function (code, options) {
+  var finalLines = []
+  options = options || {}
+  _.defaults(options, {debug: false})
+  var codeTree = code;
+  if (isString(code)) codeTree = codeToTree(code, options.fileName);
+  treeToLines(codeTree, options.fileName, finalLines);
+  var execLine = execLineMaker(finalLines, options)
+  if (options.debug) thumbsDebug.renderDebug(finalLines)
+  execLines(execLine, options.debug)
 }
 
 var runFile = function (file) {
@@ -524,7 +489,7 @@ thumbs.load = function(url, callback) {
     var _ref;
     if (xhr.readyState === 4) {
       if ((_ref = xhr.status) === 0 || _ref === 200) {
-        thumbs.run(xhr.responseText, url);
+        thumbs.run(xhr.responseText, {fileName: url});
       } else {
         throw new Error("Could not load " + url);
       }
@@ -556,7 +521,7 @@ var runScripts = function() {
       if (script.src) {
         return thumbs.load(script.src, execute);
       } else {
-        thumbs.run(script.innerHTML.slice(1), "scripttag" + (index - 1));
+        thumbs.run(script.innerHTML.slice(1), {fileName: "scripttag" + (index - 1)});
         return execute();
       }
     }

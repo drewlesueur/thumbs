@@ -13,7 +13,28 @@
 <script src="jquery.js"></script>
 <script src="underscore.js"></script>
 <script src="thumbs.js"></script>
-<script type="thumbs" src="thumbs-test.thumbs"></script>
+<script>
+
+$(function ( ) { //temporarily running this code for debugging
+  var treed = ["do",
+    ["*main-func", 
+      //["set", "'loop", ["*", 
+      //  ["set", "'list", ["get", "'0", "--args"] ],
+      //  ["say", "list"],
+      //  ["say", "'the list is:"],
+      //]],
+      //["loop",[",", "'hello", "'world"]],
+      //["set", "'my-list", [",", "'hello","'world" ]],
+      ["say", "'yo world!!"],
+      ["set", "'double", ["*double",
+          ["mult", "@", "2"]]],
+      ["say", "'yo world2!!"],
+      ["set", "'ten", ["double", "5"]],
+    ]
+  ]
+  thumbs.run(treed, {debug: true})
+})
+</script>
 </head>
 <body>
   <h1>thumbs</h1>
