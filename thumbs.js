@@ -45,34 +45,60 @@ var makeThumbsFunction = function (treeNumber, name, args, scope) { //name is fo
   }
 }
 
-var rawSet = function (name, value, scope) {
+
+var thumbsSet = function (name, value, scope) {
   //todo do a get to see which scope you should set in
   scope = scope || currentScope;
   if (isObject(scope)) {
     scope[name] = value;
     lastResult = value
+    rawReturn()
   } else if (isThumbsFunction(scope)){
+    //todo: make this a goto, so its return will count for this return
     //callThumbsFunction([scope, name, value]);   
     //[["get", "set", scope], name, value]
     //???
   }
-  return "Do not use this return value (rawSet)"
+  return "Do not use this return value (thumbsSet)"
 }
 
-var rawSetLocal = function (name, value, scope) {
+var thumbsSetLocal = function (name, value, scope) {
   scope = scope || currentScope;
   if (isObject(scope)) {
     scope[name] = value;
     lastResult = value
-
+    rawReturn()
   } else if (isThumbsFunction(scope)){
-    callThumbsFunction([scope, name, value]);   
+    // see thumbsSet
   }
 
   return "Do not use this return value (rawSetLocal)"
 }
 
-var rawGet = function (arg, scope) {
+var thumbsGet = function (arg, scope) { //compare with rawget
+  scope = scope || currentScope
+  lastResult = null;
+  if (!isObject(scope)) { 
+    throw new Error("no scope") // for now
+  } else if (arg - 0 == arg && scope == currentScope) { //??
+    lastResult = arg - 0;
+    rawReturn()
+  } else if (isThumbsFunction(scope)) {
+    //see rawSet ??
+  } else if (arg in scope) {
+    lastResult = scope[arg];
+    rawReturn()
+  } else if (scope['--parent-scope']) {
+    thumbsGet(arg, scope['--parent-scope']) //this is like a goto? because I am not calling callthumbsfunction
+  } else if (arg in thumbs.hostScope) {
+    lastResult = thumbs.hostScope[arg];
+    rawReturn()
+  }
+  //todo: php-like chain setting!
+  return "Do not use this return value (thumbsGet)"
+}
+
+var rawGet = function (arg, scope) { //compare with thumbsget
   scope = scope || currentScope
   lastResult = null;
   if (!isObject(scope)) { 
@@ -80,7 +106,7 @@ var rawGet = function (arg, scope) {
   } else if (arg - 0 == arg && scope == currentScope) { //??
     lastResult = arg - 0;
   } else if (isThumbsFunction(scope)) {
-    callThumbsFunction([scope, arg]);
+    //callThumbsFunction([scope, arg]); ??
     //here you are creating new scope and it will return
   } else if (arg in scope) {
     lastResult = scope[arg];
@@ -95,7 +121,7 @@ var rawGet = function (arg, scope) {
 rawGet.info = "get"
 
 
-var rawDo = function (fn) {
+var rawDo = function (fn) { //todo: this should be called thumbsDo
   callThumbsFunction(fn) 
 }
 
@@ -108,8 +134,8 @@ var globalScope = thumbs.scope = {
     debugger; 
   },
   fn: makeThumbsFunction,
-  set: makeThumbsFunction(rawSet, "set"),
-  get: makeThumbsFunction(rawGet, "get"),
+  set: makeThumbsFunction(thumbsSet, "set"),
+  get: makeThumbsFunction(thumbsGet, "get"),
   mult: function (a, b) { 
     return a * b 
   },
@@ -154,32 +180,36 @@ rawNoOp.info = "noop"
 
 var callThumbsFunction = function (/*args...*/) { //different from callThumbsFuncitonFromJs (not implemented yet)
   var args; args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-  rawStart();
+  //rawStart, no rawEnd??
+  rawStart(); //should I comment this out?
   callBag = args
   rawCall();
 }
 
-var rawCall = function (scope) {
+//var rawGoto //??
+//var gotoThumbsFunction //??
+
+var rawCall = function (scope) { //optionally pass in a callbag?
   scope = scope || currentScope
-  var first = callBag[0];
-  var rest = callBag.slice(1)
-  if (isFunction(first)) {//if is javascript function
-    lastResult = first.apply(null, rest)
+  var fn = callBag[0];
+  var args = callBag.slice(1)
+  if (isFunction(fn)) {//if is javascript function
+    lastResult = fn.apply(null, args)
     lastResult
-  } else if (isThumbsFunction(first)) {
+  } else if (isThumbsFunction(fn)) {
     currentScope["--pc"] = pc;
     callStack.push(currentScope);
     currentScope = {
-      '--parent-scope': first.scope,
+      '--parent-scope': fn.scope,
       '--calling-scope': currentScope,
-      '--args': rest,
+      '--args': args,
     }
 
     if (isNumber(fn.line)) {
-      currentScope[symbols["first-arg"]] = rest[0]
-      pc = first.line - 1
+      currentScope[symbols["first-arg"]] = args[0]
+      pc = fn.line - 1
     } else if (isFunction(fn.line)) {
-      fn.line.apply(null, rest) //a function that sets its own pc and returns
+      fn.line.apply(null, args) //a function that sets its own pc and returns
     }
   }
 }
@@ -306,36 +336,46 @@ window.thumbsDebug = (function () {
   var renderDebug = self.renderDebug =  function (finalLines) {
     var infos = []
     for (lineIndex in finalLines) { infos.push(finalLines[lineIndex].info); }
-     prettyPrinted = prettyPrintInfos(infos)
-     addCodeSheetIfNotThere();
-     fillLines(prettyPrinted)
+    prettyPrinted = prettyPrintInfos(infos)
+    addCodeSheetIfNotThere();
+    fillLines(prettyPrinted)
+    bindFunctionKeys()
   }
+  var bindFunctionKeys = function () {
+    //TODO: figure out step into, step out etc
+    var f10 = 121
+    $(document.body).keydown(function (e) {
+      if (e.keyCode == f10) {
+        e.preventDefault()
+        self.next()
+      }
+    })
+  }
+  var lastHighlitLine = $();
   var highlightLine = self.highlightLine = function (pc) {
-    var y = self.lineHeight * pc;
-    line.css("top", y + "px")
+    lastHighlitLine.css("background-color", "") 
+    lastHighlitLine = $('[data-line-number="'+pc+'"]')
+    lastHighlitLine.css("background-color", "rgb(100, 100, 200)")
   }
-  var codeSheet, line, next, wrapper;
+  var codeSheet, next, wrapper;
   var fillLines = function (infos) {
     _.each(infos, function(line, number){
       var lineEl = $('<pre data-line-number="'+number+'">'+line+'</pre>')
       codeSheet.append(lineEl);
     })
-
-    .text(infos.join("\n")) 
   }
   var addCodeSheetIfNotThere = function () {
     if (wrapper) return;
     wrapper = $("<div></div>") 
     codeSheet = $('<div style="position: relative;"></div>')
     next = $('<a href="#">Next</a>')
-    line = $('<div style="background-color: rgba(0,0,200, 0.25); width: 300px; height: '+self.lineHeight+'px; position: absolute; top: 0; left: 0"></div>')
     next.click(self.next)
     wrapper.append(next)
-    codeSheet.append(line)
     wrapper.append(codeSheet)
     $(document.body).append(wrapper)
 
   }
+
   var prettyPrintInfos = function (infos) {
     var spaces = 0
     var printed = []
@@ -453,6 +493,9 @@ var execLinesWithDebug = function (execLine, finalLines) {
   if (!thumbsDebug.paused) runSlowExecLine() 
   thumbsDebug.next = runSlowExecLine
   thumbsDebug.renderDebug(finalLines)
+  setTimeout(function () {
+    thumbsDebug.highlightLine(pc)
+  }, 100)
 }
 
 var execLines = function (execLine, debug, finalLines) {
