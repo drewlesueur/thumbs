@@ -56,7 +56,6 @@ var rawSet = function (name, value, scope) {
     //[["get", "set", scope], name, value]
     //???
   }
-
   return "Do not use this return value (rawSet)"
 }
 
@@ -175,8 +174,13 @@ var rawCall = function (scope) {
       '--calling-scope': currentScope,
       '--args': rest,
     }
-    currentScope[symbols["first-arg"]] = rest[0]
-    pc = first.line - 1
+
+    if (isNumber(fn.line)) {
+      currentScope[symbols["first-arg"]] = rest[0]
+      pc = first.line - 1
+    } else if (isFunction(fn.line)) {
+      fn.line.apply(null, rest) //a function that sets its own pc and returns
+    }
   }
 }
 rawCall.info = "call"
@@ -310,21 +314,24 @@ window.thumbsDebug = (function () {
     var y = self.lineHeight * pc;
     line.css("top", y + "px")
   }
-  var codeSheet, line, pre, next, wrapper;
+  var codeSheet, line, next, wrapper;
   var fillLines = function (infos) {
-    pre.text(infos.join("\n")) 
+    _.each(infos, function(line, number){
+      var lineEl = $('<pre data-line-number="'+number+'">'+line+'</pre>')
+      codeSheet.append(lineEl);
+    })
+
+    .text(infos.join("\n")) 
   }
   var addCodeSheetIfNotThere = function () {
     if (wrapper) return;
     wrapper = $("<div></div>") 
     codeSheet = $('<div style="position: relative;"></div>')
     next = $('<a href="#">Next</a>')
-    pre = $('<pre class="thumbs" style="background-color: transparent; font-size: 12px; width:300px; height: 500px; display: block;"></pre>')
     line = $('<div style="background-color: rgba(0,0,200, 0.25); width: 300px; height: '+self.lineHeight+'px; position: absolute; top: 0; left: 0"></div>')
     next.click(self.next)
     wrapper.append(next)
     codeSheet.append(line)
-    codeSheet.append(pre)
     wrapper.append(codeSheet)
     $(document.body).append(wrapper)
 
