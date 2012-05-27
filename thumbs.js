@@ -298,6 +298,7 @@ var treeToLines = function (tree, fileName, finalLines) {
 window.thumbsDebug = (function () {
   var self = {}
   self.lineHeight = 15;
+  self.paused = true;
   var renderDebug = self.renderDebug =  function (finalLines) {
     var infos = []
     for (lineIndex in finalLines) { infos.push(finalLines[lineIndex].info); }
@@ -309,20 +310,23 @@ window.thumbsDebug = (function () {
     var y = self.lineHeight * pc;
     line.css("top", y + "px")
   }
-  var codeSheet;
-  var line;
-  var pre;
+  var codeSheet, line, pre, next, wrapper;
   var fillLines = function (infos) {
     pre.text(infos.join("\n")) 
   }
   var addCodeSheetIfNotThere = function () {
-    if (codeSheet) return;
+    if (wrapper) return;
+    wrapper = $("<div></div>") 
     codeSheet = $('<div style="position: relative;"></div>')
+    next = $('<a href="#">Next</a>')
     pre = $('<pre class="thumbs" style="background-color: transparent; font-size: 12px; width:300px; height: 500px; display: block;"></pre>')
     line = $('<div style="background-color: rgba(0,0,200, 0.25); width: 300px; height: '+self.lineHeight+'px; position: absolute; top: 0; left: 0"></div>')
+    next.click(self.next)
+    wrapper.append(next)
     codeSheet.append(line)
     codeSheet.append(pre)
-    $(document.body).append(codeSheet)
+    wrapper.append(codeSheet)
+    $(document.body).append(wrapper)
 
   }
   var prettyPrintInfos = function (infos) {
@@ -422,26 +426,30 @@ var finishRunning = function () {
 }
 
 var runSlowExecLineMaker = function (execLine) {
-  return function () {
+  var runSlowExecLine = function () {
     var execed = execLine();
-    if (execed == breakSignal) {
-      finishRunning()
-    } else {
-      setTimeout(runSlowExecLine, 100)
-    }
+    if (execed == breakSignal) return finishRunning();
+    if (!thumbsDebug.paused) setTimeout(runSlowExecLine, 1);
   }
+  return runSlowExecLine
 }
 
-var execLines = function (execLine, debug) {
-  if (!debug) {
-    while (true) {
-      if (execLine() == breakSignal) break;
-    }
-    return finishRunning()
-  } else {
-    runSlowExecLine = runSlowExecLineMaker(execLine)
-    runSlowExecLine() 
+var execLinesFast = function (execLine) {
+  while (true) {
+    if (execLine() == breakSignal) break;
   }
+  return finishRunning()
+}
+
+var execLinesWithDebug = function (execLine, finalLines) {
+  var runSlowExecLine = runSlowExecLineMaker(execLine)
+  if (!thumbsDebug.paused) runSlowExecLine() 
+  thumbsDebug.next = runSlowExecLine
+  thumbsDebug.renderDebug(finalLines)
+}
+
+var execLines = function (execLine, debug, finalLines) {
+  debug ? execLinesWithDebug(execLine, finalLines) : execLinesFast(execLine)
 }
 
 var highlightLineWrapperMaker = function (execLine) {
@@ -460,8 +468,7 @@ var run = function (code, options) {
   if (isString(code)) codeTree = codeToTree(code, options.fileName);
   treeToLines(codeTree, options.fileName, finalLines);
   var execLine = execLineMaker(finalLines, options)
-  if (options.debug) thumbsDebug.renderDebug(finalLines)
-  execLines(execLine, options.debug)
+  execLines(execLine, options.debug, finalLines)
 }
 
 var runFile = function (file) {
