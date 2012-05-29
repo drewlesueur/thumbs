@@ -46,11 +46,11 @@ var makeThumbsFunction = function (treeNumber, name, args, scope) { //name is fo
 }
 
 
-var thumbsSet = function (name, value, scope) {
-  //todo do a get to see which scope you should set in
+var thumbsSet = function (name, value, scope) { //compare with a potential rawset
+  //todo do a get to see which scope you should set in. like see if it exists in a parent scope
   scope = scope || currentScope;
   if (isObject(scope)) {
-    scope[name] = value;
+    scope["--parent-scope"][name] = value;
     lastResult = value
     rawReturn()
   } else if (isThumbsFunction(scope)){
@@ -86,7 +86,7 @@ var thumbsGet = function (arg, scope) { //compare with rawget
   } else if (isThumbsFunction(scope)) {
     //see rawSet ??
   } else if (arg in scope) {
-    lastResult = scope[arg];
+    lastResult = scope[arg]; //todo: start out with parent scope?? see thumbsSet
     rawReturn()
   } else if (scope['--parent-scope']) {
     thumbsGet(arg, scope['--parent-scope']) //this is like a goto? because I am not calling callthumbsfunction
@@ -126,21 +126,23 @@ var rawDo = function (fn) { //todo: this should be called thumbsDo
 }
 
 
-var globalScope = thumbs.scope = {
+var globalScope = thumbs.scope = {}
+_.extend(globalScope, {
   thumbs: thumbs,
   "stop-signal": stopSignal,
-  "do": rawDo,
+  "do": rawDo, //todo: this should not be raw. None of these should
   "debugger": function () {
     debugger; 
   },
   fn: makeThumbsFunction,
-  set: makeThumbsFunction(thumbsSet, "set"),
-  get: makeThumbsFunction(thumbsGet, "get"),
+  set: makeThumbsFunction(thumbsSet, "set", [], globalScope),
+  get: makeThumbsFunction(thumbsGet, "get", [], globalScope),
   mult: function (a, b) { 
     return a * b 
   },
   say: function (what) {
     console.log(what)  
+    return what
   },
   "get-args--deprecated": function () {
     //this could maybe be more compiled. thing other arguments to fn
@@ -161,8 +163,8 @@ var globalScope = thumbs.scope = {
   ",": function () { //this is a list
     var args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
     return args
-  },
-}
+  }
+})
 
 var rawAdd = function (opts, scope) { 
   scope = scope || currentScope
@@ -211,6 +213,8 @@ var rawCall = function (scope) { //optionally pass in a callbag?
     } else if (isFunction(fn.line)) {
       fn.line.apply(null, args) //a function that sets its own pc and returns
     }
+  } else if (_.isNull(fn)) {
+    throw new Error("you tried to call a null function on line + " + pc)
   }
 }
 rawCall.info = "call"
@@ -340,40 +344,106 @@ window.thumbsDebug = (function () {
     addCodeSheetIfNotThere();
     fillLines(prettyPrinted)
     bindFunctionKeys()
+    handleAddingBreakpoints()
+    addInitialBreakpoints()
   }
+
+  var addInitialBreakpoints = function () {
+    if (localStorage.breakpoints) {
+      breakpoints = JSON.parse(localStorage.breakpoints);
+    }
+
+    _.each(breakpoints, function (breakpoint) {
+        var lineEl = $('[data-line-number="'+breakpoint+'"]'); 
+        addBreakpointHandler(breakpoint, lineEl)
+    })
+  }
+
+  var handleAddingBreakpoints = function () {
+    codeSheet.click(function (e) {
+      lineEl = $(e.target) 
+      var lineNumber = parseInt(lineEl.attr("data-line-number"))
+      if (lineEl.hasClass("breakpoint")) {
+        lineEl.removeClass("breakpoint") 
+        removeBreakpoint(lineNumber)
+      } else {
+        addBreakpointHandler(lineNumber, lineEl)
+      }
+    })
+  }
+
+  var addBreakpointHandler = function (lineNumber, lineEl) {
+    lineEl.addClass("breakpoint")
+    addBreakpoint(lineNumber)
+  }
+  
+  var getBreakpoints = self.getBreakpoints = function () {
+    return breakpoints;
+  }
+  var breakpointExistsAt = self.breakpointExistsAt = function (pc) {
+    return _.indexOf(breakpoints, pc, true) != -1; //true means breakpoints is sorted
+  }
+
   var bindFunctionKeys = function () {
     //TODO: figure out step into, step out etc
     var f10 = 121
+    var f8 = 119
     $(document.body).keydown(function (e) {
+      console.log(e.keyCode)
       if (e.keyCode == f10) {
         e.preventDefault()
         self.next()
+      } else if (e.keyCode == f8) {
+        e.preventDefault() 
+        self.play()
       }
     })
   }
   var lastHighlitLine = $();
   var highlightLine = self.highlightLine = function (pc) {
-    lastHighlitLine.css("background-color", "") 
+    lastHighlitLine.removeClass("highlight")
     lastHighlitLine = $('[data-line-number="'+pc+'"]')
-    lastHighlitLine.css("background-color", "rgb(100, 100, 200)")
+    lastHighlitLine.addClass("highlight")
   }
-  var codeSheet, next, wrapper;
+  var codeSheet, next, wrapper, breakpoints;
+  var breakpoints = []
+  var addBreakpoint = function (bp) {
+    breakpoints.push(bp) 
+    breakpoints = _.sortBy(breakpoints, _.identity)
+    localStorage.breakpoints = JSON.stringify(breakpoints)
+  }
+
+  var removeBreakpoint = function (bp) {
+    breakpoints = _.without(breakpoints, bp)
+    localStorage.breakpoints = JSON.stringify(breakpoints)
+  }
+
   var fillLines = function (infos) {
     _.each(infos, function(line, number){
-      var lineEl = $('<pre data-line-number="'+number+'">'+line+'</pre>')
+      var lineEl = $('<pre data-line-number="'+number+'">'+number+" "+line+'</pre>')
       codeSheet.append(lineEl);
     })
   }
+  var play = self.play = function () {
+    self.paused = false 
+    self.next()
+    console.log("play")
+  }
   var addCodeSheetIfNotThere = function () {
     if (wrapper) return;
-    wrapper = $("<div></div>") 
-    codeSheet = $('<div style="position: relative;"></div>')
-    next = $('<a href="#">Next</a>')
+    wrapper = $("<div class='thumbs-debug'></div>") 
+    codeSheet = $('<div class="code-sheet" style="position: relative;"></div>')
+    var next = $('<a href="#">Next</a>')
     next.click(self.next)
+
+    var playEl = $('<a href="#">Play</a>')
+    playEl.click(self.play)
+
     wrapper.append(next)
+    wrapper.append("&nbsp;")
+    wrapper.append(playEl)
     wrapper.append(codeSheet)
     $(document.body).append(wrapper)
-
   }
 
   var prettyPrintInfos = function (infos) {
@@ -460,7 +530,7 @@ var execLineMaker = function (finalLines, options) {
     }
     pc += 1
   }
-  if (options.debug) execLine = highlightLineWrapperMaker(execLine)
+  if (options.debug) execLine = debugExecLine(execLine)
   return execLine;
 }
 
@@ -502,11 +572,13 @@ var execLines = function (execLine, debug, finalLines) {
   debug ? execLinesWithDebug(execLine, finalLines) : execLinesFast(execLine)
 }
 
-var highlightLineWrapperMaker = function (execLine) {
+var debugExecLine = function (execLine) {
   return function () {
     thumbsDebug.highlightLine(pc)
-    execLine()
+    var ret = execLine()
     thumbsDebug.highlightLine(pc)
+    if (thumbsDebug.breakpointExistsAt(pc)) thumbsDebug.paused = true;
+    return ret
   }
 }
 
@@ -531,6 +603,8 @@ var runFile = function (file) {
 thumbs.runScripts = runScripts
 thumbs.run = run //runs raw code
 thumbs.runFile = runFile
+thumbs.getCurrentScope = function () { return currentScope; }
+thumbs.getCallBag = function () { return callBag; }
 
 //borrowed from
 //https://raw.github.com/jashkenas/coffee-script/master/src/browser.coffee
