@@ -26,6 +26,17 @@ Compare with coffeescript
     inc
     inc
 
+    # objects and arrays (maps and lists)
+    band is mp
+      name 'Aterciopelados
+      albums ls 'Oye 'Rio
+      members mp
+        leadSinger 'Andrea
+        bass 'Hector
+
+    # one-line objects
+    person is mp name 'Drew age 27
+
 </td><td>
 ## CoffeeScript
     # strings
@@ -46,7 +57,16 @@ Compare with coffeescript
     inc = incMaker()
     inc()
     inc()
-<td>
-</td>
+
+    # objects and arrays
+    band =
+      name: "Aterciopelados"
+      albums: ["Oye", "Rio"]
+      members:
+        leadSinger: "Andrea"
+        bass: "Hector"
+
+    # one-line objects
+    person = name: 'Drew', age: 27
 </tr>
 </tabe>
