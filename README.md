@@ -5,29 +5,48 @@ A programming language for your thumbs
 
 Compare with coffeescript
 
-<table>
-  <tr>
-  <td>
-    <pre><code>
-# thumbs strings
-name is ' Drew LeSueur
+<table><tr><td>
+## thumbs    
+    #strings
+    name is ' Drew LeSueur
+    wife is 'Aimee
 
-# thumbs functions
-say-hi is fn name
-  ' hello $name
+    #functions
+    say-hi is fn name
+      ' hello $name
 
-# thumbs 
-</code></pre>
-  </td>
-    <pre><code>
-# coffeescript strings
-# name = "Drew LeSueur"
+    # one-line functions
+    bang is f alert 'bang
 
-# coffeescript functions
-sayHi = (name) ->
-  "hello #{name}"
-</code></pre>
-  <td>
-  </td>
-  </tr>
+    # closure
+    inc-maker is fn
+      x is 0
+      f add x 1
+    inc is inc-maker
+    inc
+    inc
+
+</td><td>
+## CoffeeScript
+    # strings
+    name = "Drew LeSueur"
+    wife = "Aimee"
+    
+    # functions
+    sayHi = (name) ->
+      "hello #{name}"
+
+    # one-line functions
+    bang = -> alert "bang"
+    
+    # closure
+    incMaker = ->
+      x = 0
+      -> x + 1
+    inc = incMaker()
+    inc()
+    inc()
+<td>
+</td>
+</tr>
 </tabe>
