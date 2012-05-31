@@ -57,7 +57,7 @@ Compare with coffeescript
 
     # objects and then callbacks
     save-data
-      mp left: 100, right: 101 ,
+      mp left 100 right 101
       fn err answer 
         say "the answer is #{answer}"
 
