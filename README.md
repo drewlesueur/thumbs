@@ -12,10 +12,10 @@ Compare with coffeescript
     wife is 'Aimee
 
     #functions
-    say-hi is fn name
-      ' hello $name
+    say-hi is fn name punctuation
+      ' hello $name $punctuation
 
-    say-hi 'world
+    say-hi 'world '!
 
     # one-line functions
     bang is f alert 'bang
@@ -39,6 +39,18 @@ Compare with coffeescript
     # one-line objects
     person is mp name 'Drew age 27
 
+    # access
+    band.members.leadSinger 
+
+    # set access
+    band.members.drumbs is 'Catalina
+
+    # not there access
+    band.instruments.main is 'Guitar
+
+    # function function calls
+    save wp JSON.parse rawData
+
 </td><td>
 ## CoffeeScript
     # strings
@@ -46,10 +58,10 @@ Compare with coffeescript
     wife = "Aimee"
     
     # functions
-    sayHi = (name) ->
-      "hello #{name}"
+    sayHi = (name, punctuation) ->
+      "hello #{name} #{punctuation}"
 
-    sayHi "world"
+    sayHi "world", "!"
 
     # one-line functions
     bang = -> alert "bang"
@@ -72,5 +84,18 @@ Compare with coffeescript
 
     # one-line objects
     person = name: 'Drew', age: 27
+
+    # access
+    band.members.leadSinger 
+
+    # set access
+    band.members.drumbs = 'Catalina'
+
+    # not there access
+    # n/a
+
+    # function function calls
+    save JSON.parse rawData
+
 </tr>
 </tabe>
