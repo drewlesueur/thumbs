@@ -128,6 +128,8 @@ Compare with coffeescript
     saveData left: 100, right: 101 , (err, answer) ->
       say "the answer is #{answer}"
 
+
+
     # if
       if name is 'intruder'
         console.log 'you are an intruder and can't enter'
