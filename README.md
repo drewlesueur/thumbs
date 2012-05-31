@@ -15,6 +15,8 @@ Compare with coffeescript
     say-hi is fn name
       ' hello $name
 
+    say-hi 'world
+
     # one-line functions
     bang is f alert 'bang
 
@@ -46,6 +48,8 @@ Compare with coffeescript
     # functions
     sayHi = (name) ->
       "hello #{name}"
+
+    sayHi "world"
 
     # one-line functions
     bang = -> alert "bang"
