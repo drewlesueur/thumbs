@@ -74,6 +74,10 @@ Compare with coffeescript
         f name.is 'bird
         f say ' fly on in
 
+    # bracket access
+      people,person-index.hairColor  
+
+
 </td><td>
 ## CoffeeScript
     # strings
@@ -142,6 +146,9 @@ Compare with coffeescript
         console.log 'you are an intruder and can't enter'
       else if name is "bird"
         console.log "fly on in"
+
+    # bracket access
+      people[personIndex].hairColor  
 
 </tr>
 </tabe>
