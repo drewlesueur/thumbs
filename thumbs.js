@@ -45,7 +45,7 @@ var makeThumbsFunction = function (treeNumber, name, args, scope) { //name is fo
   }
 }
 
-
+//This should be the scope function? scope(key, value) == set(key, value) ??
 var thumbsSet = function (name, value, scope) { //compare with a potential rawset
   //todo do a get to see which scope you should set in. like see if it exists in a parent scope
   scope = scope || currentScope;
