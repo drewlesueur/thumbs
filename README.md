@@ -8,7 +8,7 @@ Compare with coffeescript
 <table>
   <tr>
   <td>
-    <pre>
+    <pre><code>
 # thumbs strings
 name is ' Drew LeSueur
 
@@ -17,16 +17,16 @@ say-hi is fn name
   ' hello $name
 
 # thumbs 
-   </pre>
+</code></pre>
   </td>
-    <pre>
+    <pre><code>
 # coffeescript strings
 # name = "Drew LeSueur"
 
 # coffeescript functions
 sayHi = (name) ->
   "hello #{name}"
-  </pre>
+</code></pre>
   <td>
   </td>
   </tr>
