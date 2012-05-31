@@ -7,11 +7,11 @@ Compare with coffeescript
 
 <table><tr><td>
 ## thumbs    
-    #strings
+    # strings
     name is ' Drew LeSueur
     wife is 'Aimee
 
-    #functions
+    # functions
     say-hi is fn name punctuation
       ' hello $name $punctuation
 
@@ -50,6 +50,29 @@ Compare with coffeescript
 
     # function function calls
     save wp JSON.parse rawData
+
+    # callbacks
+    save-data 101 fn err answer
+      say ' the answer is $answer
+
+    # objects and then callbacks
+    save-data
+      mp left: 100, right: 101 ,
+      fn err answer 
+        say "the answer is #{answer}"
+
+    # if  (all functional)
+      if
+        f name.is 'intruder
+        f say ' you are an intruder and can't enter
+        f name.is 'bird
+        f say ' fly on in
+
+    # if again
+      name.is 'intruder
+        f say ' you are an intruder and can't enter
+        f name.is 'bird
+        f say ' fly on in
 
 </td><td>
 ## CoffeeScript
@@ -96,6 +119,27 @@ Compare with coffeescript
 
     # function function calls
     save JSON.parse rawData
+
+    # callbacks
+    saveData 101, (err, answer) ->
+      say "the answer is #{answer}"
+
+    # objects and then callbacks
+    saveData left: 100, right: 101 , (err, answer) ->
+      say "the answer is #{answer}"
+
+    # if
+      if name is 'intruder'
+        console.log 'you are an intruder and can't enter'
+      else if name is "bird"
+        console.log "fly on in"
+
+
+    # if again (same in coffescript)
+      if name is 'intruder'
+        console.log 'you are an intruder and can't enter'
+      else if name is "bird"
+        console.log "fly on in"
 
 </tr>
 </tabe>
