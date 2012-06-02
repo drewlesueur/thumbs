@@ -1,0 +1,85 @@
+
+if x is 3
+  say ' x is 3
+else if x is 4
+  say ' x is 4
+else if have-many-people
+  say ' there are many people
+else
+  do something else
+
+for person index in people
+  say ' here is a person
+
+say-hi is fn name
+  say hi name
+
+while x is-less-than y
+  do all this stuff
+  yo
+
+
+
+with obj.new as yo
+  say ' yo
+gT
+
+    handle-new-line is fn
+      if is-new-line
+        indent-count is 0
+      else if is-space
+        inc indent-count 1
+      else if is-string-chr
+        mode is 'code
+      is-start-string
+        mode is 'string
+      is x 1
+         
+
+      if object is 3
+      
+      each objects fn value prop
+        say ' $prop $value
+
+      is name 'drew' fn
+        say ' your name is drew
+      else 
+     
+      is-new-line
+        indent-count is 0
+      else is-space
+        inc indent-count 1
+      else is-string-chr
+
+      is x 3
+        no way
+      else is x 4
+        yes way
+        other way
+     
+      k
+        
+
+      if is-new-line
+        indent-count is 0
+      else if is-space
+        inc indent-count 1
+      else if is-string-chr
+
+        
+
+    handle-new-line is fn
+      if
+        f is-new-line
+        f indent-count is 0
+        f is-space
+        f inc indent-count 1
+        f is-string-chr
+        f mode is 'code
+        f is-start-string
+        f mode is 'string
+
+        
+        
+
+        

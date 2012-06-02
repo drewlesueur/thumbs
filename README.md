@@ -52,7 +52,7 @@ Compare with coffeescript
     save wp JSON.parse rawData
 
     # callbacks
-    save-data 101 fn err answer
+    save-data 101 fn err answers
       say ' the answer is $answer
 
     # objects and then callbacks

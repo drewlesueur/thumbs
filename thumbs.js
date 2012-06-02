@@ -26,6 +26,8 @@ if (typeof exports !== 'undefined') {
 var stopSignal = "abort. repeat. abort. :)";
 
 //todo: cache getting of default functions like 'set' and 'get-args'
+//
+
 
 var makeThumbsFunction = function (treeNumber, name, args, scope) { //name is for debugging purposes
   scope = scope || currentScope
@@ -257,6 +259,7 @@ var getId = function (prefix) {
 var separateFunctions = function (tree, trees) {
   var trees = trees || [];
   var childTree, lineNumber, fileName, bagOfSand, goldStatue;
+
   for (var i = 0; i < tree.length; i++) {
     childTree = tree[i];
     if (childTree[0].charAt(0) == symbols["function"]) {
@@ -610,25 +613,26 @@ var parse = function (code) {
     var isSpace = function () { return chr == " "}
     var isNewLine = function () { return chr == "\n"}
     var isStringChr = function () { return chr != " " && chr != "\n" && chr != "\r" && chr != "\t"}
-    var isStartString = funciton () { return chr == symbols.string || symbols["string-literal"] }
+    var isStartString = function () { return chr == symbols.string || symbols["string-literal"] }
     var finalBucket = []
     var callBucket = []
     var wordBucket = []
 
+
     var handleNewLine = function () {
-      if (isNewLine()) {
-        indentCount == 0 
-      } else if (isSpace()) {
-        indentCount += 1 
-      } else if (isStringChr()) {
-         
-      }
+      if (isNewLine())
+        indentCount == 0;
+      else if (isSpace()) 
+        indentCount += 1;
+      else if (isStringChr()) 
+        mode = "code";
+      else if (isStartString()) 
+        mode = "string";
     }
 
     var handleCode = function () {
-      if (isStartString()) {
-        mode = "string" 
-      }
+      if (isStartString())
+        mode = "string";
     }
 
     var handleString = function () {
