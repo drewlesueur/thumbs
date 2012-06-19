@@ -1,3 +1,33 @@
+list-of-functions : memoized : fn (a b c)
+  do-something b c
+: fn (d e f)
+  do-something 
+: fn ( a b)
+  do something else
+
+
+
+if (x is 3) : do
+  say ' yo x is 3
+: (x is 4)
+  say ' yo x is 4
+
+
+
+if (is x 3) . (a b c)
+  
+if (is x 3) . fn (a b c)
+
+
+set a : obj name 'Drew
+
+set 'a : obj name 'drewgt
+
+if (is x 3) :
+    
+: 
+
+
 
 if x is 3
   say ' x is 3
