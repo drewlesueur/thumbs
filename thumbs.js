@@ -1,4 +1,6 @@
-;(function () {
+setModule("thumbs", function () {
+_ = getModule("underscore")
+parensParser = getModule("parens-parser")
 
 if (typeof console === "undefined" || console === null) {
   console = { log: function() {} };
@@ -674,4 +676,5 @@ if (window.addEventListener) {
 } else {
   attachEvent('onload', runScripts);
 }
-})();
+return thumbs;
+});

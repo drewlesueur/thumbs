@@ -16,19 +16,25 @@
 
 <script src="/poor_modules/poor-module.js"></script>
 <script src="/poor_modules/underscore.js"></script>
+<script>
+setModule("underscore", function () { return _ })
+</script>
+<script src="/poor_modules/parens-parser.js"></script>
 
 <script src="jquery.js"></script>
 <script src="thumbs.js"></script>
-<script type="text/thumbs-lisp">
-(say "yo world")
-(set "double" (*double 
-()
-))
-(set "ten")
+<script id="parens" type="text/thumbs-lisp">
+(say "hello world")
+(def double (x) (mult x 2))
 </script>
 <script>
+var thumbs = getModule("thumbs");
+var parensParser = getModule("parens-parser");
+
 
 $(function ( ) { //temporarily running this code for debugging
+  testParens = $("#parens").html
+  console.log(parensParser.parse())
   var treed = ["do",
     ["*main-func", 
       //["set", "'loop", ["*", 
