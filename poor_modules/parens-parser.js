@@ -14,7 +14,7 @@ setModule("parens-parser", function () { return function (code) {
       var handleEndQuote = function () { 
         if (strNameIsNext()) { 
           state = "code"; i += strName.length;
-          group.push(word); resetWord(); return; }
+          group.push("'" + word); resetWord(); return; }
         word += chr;
       }, strNameIsNext = function () {
         var next = code.substr(i+1, strName.length);

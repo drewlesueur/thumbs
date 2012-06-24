@@ -249,7 +249,9 @@ rawReturn.info = "return"
 
 var codeToTree = function (code, fileName) {
   //todo: return an a lisp-like array based off the code.
-  //
+  var parsed = parensParser(code)
+  console.log(parsed)
+  return parsed;
 }
 
 var id = 0;
@@ -591,7 +593,7 @@ var debugExecLine = function (execLine) {
 var run = function (code, options) {
   var finalLines = []
   options = options || {}
-  _.defaults(options, {debug: false})
+  _.defaults(options, {debug: true})
   var codeTree = code;
   if (isString(code)) codeTree = codeToTree(code, options.fileName);
   treeToLines(codeTree, options.fileName, finalLines);
@@ -615,7 +617,6 @@ thumbs.getCallBag = function () { return callBag; }
 
 //borrowed from
 //https://raw.github.com/jashkenas/coffee-script/master/src/browser.coffee
-
 if (typeof window === "undefined" || window === null) return thumbs;
 fakeScript = fakeScript(["text/thumbs", "thumbs"], thumbs.run);
 fakeScript.runScripts();

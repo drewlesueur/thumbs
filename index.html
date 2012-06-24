@@ -5,14 +5,12 @@
 <link rel="stylesheet" href="thumbs.css" type="text/css" charset="utf-8">
 <style>
   * {
-		font-family: 'DejaVuSansMonoBook';
+		font-family: 'Consolas', 'DejaVuSansMonoBook';
     margin: 0;
     padding: 0;
     box-sizing: border-box;
   }
 </style>
-
-
 
 <script src="/poor_modules/poor-module.js"></script>
 <script src="/poor_modules/underscore.js"></script>
@@ -24,52 +22,11 @@ setModule("underscore", function () { return _ })
 
 <script src="jquery.js"></script>
 <script src="thumbs.js"></script>
-<script id="parens" type="text/thumbs-lisp">
-(stringed-string "" a)
-(str "
-carriage returns
-
-yo!
-")
-(say "hello world")
-(def double (x) (mult x (add 1 2)))
-(hi *"this is a tring that has to end with a "b "world"*)
-</script>
 <script>
-var time = function (fn) {
-  var start = Date.now()
-  fn()
-  console.log(Date.now() - start)
-}
 var thumbs = getModule("thumbs");
-var parensParser = getModule("parens-parser");
-
-
-$(function ( ) { //temporarily running this code for debugging
-  testParens = $("#parens").html()
-  time(function () {parsed = parensParser(testParens)})
-  console.log(parsed)
-
-
-  var treed = ["do",
-    ["*main-func", 
-      //["set", "'loop", ["*", 
-      //  ["set", "'list", ["get", "'0", "--args"] ],
-      //  ["say", "list"],
-      //  ["say", "'the list is:"],
-      //]],
-      //["loop",[",", "'hello", "'world"]],
-      //["set", "'my-list", [",", "'hello","'world" ]],
-      ["say", "'yo world!!"],
-      ["set", "'double", ["*double",
-          ["mult", "@", "2"]]],
-      ["say", "'yo world2!!"],
-      ["set", "'ten", ["double", "5"]],
-      ["say", "ten"],
-    ]
-  ]
-  thumbs.run(treed, {debug: true})
-})
+</script>
+<script type="thumbs">
+(say "'hello world!!")
 </script>
 </head>
 <body>
