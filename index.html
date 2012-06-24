@@ -20,11 +20,17 @@
 setModule("underscore", function () { return _ })
 </script>
 <script src="/poor_modules/parens-parser.js"></script>
+<script src="/poor_modules/fake-script.js"></script>
 
 <script src="jquery.js"></script>
 <script src="thumbs.js"></script>
 <script id="parens" type="text/thumbs-lisp">
 (stringed-string "" a)
+(str "
+carriage returns
+
+yo!
+")
 (say "hello world")
 (def double (x) (mult x (add 1 2)))
 (hi *"this is a tring that has to end with a "b "world"*)

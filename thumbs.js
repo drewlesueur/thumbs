@@ -1,11 +1,11 @@
 setModule("thumbs", function () {
 _ = getModule("underscore")
 parensParser = getModule("parens-parser")
+fakeScript = getModule("fake-script");
 
 if (typeof console === "undefined" || console === null) {
   console = { log: function() {} };
 }
-
 
 var isFunction = _.isFunction;
 var isObject = _.isObject;
@@ -606,12 +606,8 @@ var runFile = function (file) {
   return ran;
 } 
 
-var parseParens = function (code) {
-  
-}
 // parse
 
-thumbs.runScripts = runScripts
 thumbs.run = run //runs raw code
 thumbs.runFile = runFile
 thumbs.getCurrentScope = function () { return currentScope; }
@@ -620,61 +616,9 @@ thumbs.getCallBag = function () { return callBag; }
 //borrowed from
 //https://raw.github.com/jashkenas/coffee-script/master/src/browser.coffee
 
-if (typeof window === "undefined" || window === null) return;
-
-thumbs.load = function(url, callback) {
-  var xhr;
-  xhr = new (window.ActiveXObject || XMLHttpRequest)('Microsoft.XMLHTTP');
-  xhr.open('GET', url, true);
-  if ('overrideMimeType' in xhr) xhr.overrideMimeType('text/plain');
-  xhr.onreadystatechange = function() {
-    var _ref;
-    if (xhr.readyState === 4) {
-      if ((_ref = xhr.status) === 0 || _ref === 200) {
-        thumbs.run(xhr.responseText, {fileName: url});
-      } else {
-        throw new Error("Could not load " + url);
-      }
-      if (callback) return callback();
-    }
-  };
-  return xhr.send(null);
-};
-
-var runScripts = function() {
-  var thumbses, execute, index, length, s, scripts;
-  scripts = document.getElementsByTagName('script');
-  thumbses = (function() {
-    var _i, _len, _results;
-    _results = [];
-    for (_i = 0, _len = scripts.length; _i < _len; _i++) {
-      s = scripts[_i];
-      if (s.type === 'text/thumbs' || s.type == "thumbs") _results.push(s);
-    }
-    return _results;
-  })();
-  index = 0;
-  length = thumbses.length;
-  (execute = function() {
-    var script;
-    script = thumbses[index++];
-    var scriptType = (script != null ? script.type : void 0)
-    if (scriptType === 'text/thumbs' || scriptType === "thumbs") {
-      if (script.src) {
-        return thumbs.load(script.src, execute);
-      } else {
-        thumbs.run(script.innerHTML.slice(1), {fileName: "scripttag" + (index - 1)});
-        return execute();
-      }
-    }
-  })();
-  return null;
-};
-
-if (window.addEventListener) {
-  addEventListener('DOMContentLoaded', runScripts, false);
-} else {
-  attachEvent('onload', runScripts);
-}
+if (typeof window === "undefined" || window === null) return thumbs;
+fakeScript = fakeScript(["text/thumbs", "thumbs"], thumbs.run);
+fakeScript.runScripts();
+_.extend(thumbs, fakeScript);
 return thumbs;
-});
+})
