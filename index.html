@@ -24,18 +24,24 @@ setModule("underscore", function () { return _ })
 <script src="jquery.js"></script>
 <script src="thumbs.js"></script>
 <script id="parens" type="text/thumbs-lisp">
+(stringed-string "" a)
 (say "hello world")
-(def double (x) (mult x (add 1 2))
-
+(def double (x) (mult x (add 1 2)))
+(hi *"this is a tring that has to end with a "b "world"*)
 </script>
 <script>
+var time = function (fn) {
+  var start = Date.now()
+  fn()
+  console.log(Date.now() - start)
+}
 var thumbs = getModule("thumbs");
 var parensParser = getModule("parens-parser");
 
 
 $(function ( ) { //temporarily running this code for debugging
   testParens = $("#parens").html()
-  parsed = parensParser(testParens)
+  time(function () {parsed = parensParser(testParens)})
   console.log(parsed)
 
 
