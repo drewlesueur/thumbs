@@ -26,6 +26,7 @@ setModule("underscore", function () { return _ })
 <script id="parens" type="text/thumbs-lisp">
 (say "hello world")
 (def double (x) (mult x 2))
+
 </script>
 <script>
 var thumbs = getModule("thumbs");
@@ -33,8 +34,11 @@ var parensParser = getModule("parens-parser");
 
 
 $(function ( ) { //temporarily running this code for debugging
-  testParens = $("#parens").html
-  console.log(parensParser.parse())
+  testParens = $("#parens").html()
+  parsed = parensParser.parse(testParens)
+  console.log(parsed)
+
+
   var treed = ["do",
     ["*main-func", 
       //["set", "'loop", ["*", 
