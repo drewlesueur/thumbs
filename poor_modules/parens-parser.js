@@ -4,7 +4,7 @@ setModule("parens-parser", function () { return function (code) {
     var innerParse = function () {
       var nestedParens = function () { group.push(innerParse()) }
       var handleStartParens = function () { incIndex(); nestedParens(); }
-      var handleEndParens = function () { return breakSignal; }
+      var handleEndParens = function () { handleSpace(); return breakSignal; }
       var addWord = function () { if (word.length) group.push(word); }
       var resetWord = function () { word = "" }
       var handleSpace = function () { addWord(); resetWord(); }
