@@ -35,7 +35,7 @@ var parensParser = getModule("parens-parser");
 
 $(function ( ) { //temporarily running this code for debugging
   testParens = $("#parens").html()
-  parsed = parensParser.parse(testParens)
+  parsed = parensParser(testParens)
   console.log(parsed)
 
 

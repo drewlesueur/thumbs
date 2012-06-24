@@ -1,9 +1,5 @@
-setModule("parens-parser", function () {
-  var parse = function (code, i) {
-    if (!i) i = 0;
-    var codeLength = code.length;
-    var breakSignal = "BREAK!! xyzzy"
-    var ret;
+setModule("parens-parser", function () { return function (code) {
+    var i = 0, ret, codeLength = code.length, breakSignal = "BREAK!! xyzzy";
     var incIndex = function () { i += 1 }
     var innerParse = function () {
       var nestedParens = function () { group.push(innerParse()) }
@@ -25,20 +21,11 @@ setModule("parens-parser", function () {
       var isEndParens = function () { return chr == ")"; }
       var isSpaceLike = function () { return chr == " " || chr == "\n" || chr == "\r" || chr == "\t" }
       var isQuote = function () { return chr == "\"" }
-      var word = "";
-      var state = "code" // (string-list code text)
-      var group = [];
-      var chr = "";
+      var word = "", state = "code", group = [], chr = "";
       while (i < codeLength) {
         chr = code.charAt(i);
         if (state == "code") { ret = handleCode() } 
         else if (state == "text") { ret = handleText() }
         if (ret == breakSignal) break;
         incIndex();
-      }    
-      return group;
-    }
-    return innerParse();
-  }
-  return {parse: parse}
-})
+      }; return group; }; return innerParse(); } })
