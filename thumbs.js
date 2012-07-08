@@ -228,7 +228,7 @@ var separateFunctions = function (tree, trees) {
 
   for (var i = 0; i < tree.length; i++) {
     childTree = tree[i];
-    if (childTree[0].charAt(0) == symbols["function"]) {
+    if (isString(childTree[0]) && childTree[0].charAt(0) == symbols["function"]) {
       var name = childTree[0].substring(1) 
       var args = childTree[1]
       bagOfSand = ["*" + (trees.length+1), "'" + name]; //we add one because we are going to be unshifting

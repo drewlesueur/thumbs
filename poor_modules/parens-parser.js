@@ -3,12 +3,18 @@ setModule("parens-parser", function () { return function (code) {
     var incIndex = function () { i += 1 }
     var innerParse = function () {
       var lastGroup = function () { return group[group.length - 1] }
+      var secondTolastGroup = function () { return group[group.length - 2] }
+      var lastCharIsEndParens = function () { return code.substr(i - 1, 1) == ")" }
       var nestedParens = function () { group.push(innerParse()) }
       var handleStartParens = function () { 
+        var isCallCall = lastCharIsEndParens() //(get fn)(a b c)
         incIndex(); nestedParens();
         if (word.length) {
           lastGroup().unshift(word);
           resetWord();
+        } else if (isCallCall) {
+          var func = group.splice(group.length - 2, 1)[0]
+          lastGroup().unshift(func)
         }
       }
       var handleEndParens = function () { handleSpace(); return breakSignal; }
