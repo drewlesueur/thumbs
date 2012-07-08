@@ -2,8 +2,15 @@ setModule("parens-parser", function () { return function (code) {
     var i = 0, ret, codeLength = code.length, breakSignal = "BREAK!! xyzzy";
     var incIndex = function () { i += 1 }
     var innerParse = function () {
+      var lastGroup = function () { return group[group.length - 1] }
       var nestedParens = function () { group.push(innerParse()) }
-      var handleStartParens = function () { incIndex(); nestedParens(); }
+      var handleStartParens = function () { 
+        incIndex(); nestedParens();
+        if (word.length) {
+          lastGroup().unshift(word);
+          resetWord();
+        }
+      }
       var handleEndParens = function () { handleSpace(); return breakSignal; }
       var addWord = function () { if (word.length) group.push(word); }
       var resetWord = function () { word = "" }

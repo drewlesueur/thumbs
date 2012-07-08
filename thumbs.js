@@ -31,7 +31,6 @@ var stopSignal = "abort. repeat. abort. :)";
 //todo: cache getting of default functions like 'set' and 'get-args'
 //
 
-
 var makeThumbsFunction = function (treeNumber, name, args, scope) { //name is for debugging purposes
   scope = scope || currentScope
   var lineNumberOrFunc;
@@ -55,7 +54,7 @@ var thumbsSet = function (name, value, scope) { //compare with a potential rawse
   //todo do a get to see which scope you should set in. like see if it exists in a parent scope
   scope = scope || currentScope;
   if (isObject(scope)) {
-    scope["--parent-scope"][name] = value;
+    scope[name] = value;
     lastResult = value
     rawReturn()
   } else if (isThumbsFunction(scope)){
@@ -88,15 +87,8 @@ var thumbsGet = function (arg, scope) { //compare with rawget
   } else if (arg - 0 == arg && scope == currentScope) { //??
     lastResult = arg - 0;
     rawReturn()
-  } else if (isThumbsFunction(scope)) {
-    //see rawSet ??
   } else if (arg in scope) {
     lastResult = scope[arg]; //todo: start out with parent scope?? see thumbsSet
-    rawReturn()
-  } else if (scope['--parent-scope']) {
-    thumbsGet(arg, scope['--parent-scope']) //this is like a goto? because I am not calling callthumbsfunction
-  } else if (arg in thumbs.hostScope) {
-    lastResult = thumbs.hostScope[arg];
     rawReturn()
   }
   //todo: php-like chain setting!
@@ -110,15 +102,8 @@ var rawGet = function (arg, scope) { //compare with thumbsget
     throw new Error("no scope") // for now
   } else if (arg - 0 == arg && scope == currentScope) { //??
     lastResult = arg - 0;
-  } else if (isThumbsFunction(scope)) {
-    //callThumbsFunction([scope, arg]); ??
-    //here you are creating new scope and it will return
   } else if (arg in scope) {
     lastResult = scope[arg];
-  } else if (scope['--parent-scope']) {
-    rawGet(arg, scope['--parent-scope']) 
-  } else if (arg in thumbs.hostScope) {
-    lastResult = thumbs.hostScope[arg];
   }
   //todo: php-like chain setting!
   return "Do not use this return value (rawGet)"
@@ -149,23 +134,7 @@ _.extend(globalScope, {
     console.log(what)  
     return what
   },
-  "get-args--deprecated": function () {
-    //this could maybe be more compiled. thing other arguments to fn
-    var args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-    var oldPc = pc
-    var startSettingPc = finalLines.length
-    each(args, function (arg, i) {
-      finalLines.push(function () { 
-        rawSet(arg, currentScope['--args'][i])
-      })  
-      // lines.push ! raw-set arg current-scope.--args,i
-    })
-    finalLines.push(function () {
-      pc = oldPc;
-    })
-    pc = startSettingPc - 1
-  },
-  ",": function () { //this is a list
+  "ls": function () { //this is a list
     var args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
     return args
   }
@@ -202,15 +171,8 @@ var rawCall = function (scope) { //optionally pass in a callbag?
   var args = callBag.slice(1)
   if (isFunction(fn)) {//if is javascript function
     lastResult = fn.apply(null, args)
-    lastResult
   } else if (isThumbsFunction(fn)) {
-    currentScope["--pc"] = pc;
-    callStack.push(currentScope);
-    currentScope = {
-      '--parent-scope': fn.scope,
-      '--calling-scope': currentScope,
-      '--args': args,
-    }
+    pcStack.push(pc)
 
     if (isNumber(fn.line)) {
       currentScope[symbols["first-arg"]] = args[0]
@@ -242,8 +204,7 @@ var symbols = {
 }
 
 var rawReturn = function () {
-  currentScope = callStack.pop()
-  pc = currentScope["--pc"]
+  pc = pcStack.pop()
 }
 rawReturn.info = "return"
 
@@ -270,7 +231,7 @@ var separateFunctions = function (tree, trees) {
     if (childTree[0].charAt(0) == symbols["function"]) {
       var name = childTree[0].substring(1) 
       var args = childTree[1]
-      bagOfSand = ["fn", trees.length+1, "'" + name]; //we add one because we are going to be unshifting
+      bagOfSand = ["*" + (trees.length+1), "'" + name]; //we add one because we are going to be unshifting
       //TODO: bagOfSand should be a js function that calls makethumbsfunction
       goldStatueWrapper = tree.splice(i, 1, bagOfSand)
       goldStatue = goldStatueWrapper[0].slice(1) 
@@ -299,6 +260,13 @@ var branchToLines = function (branch, lines) {
         //TODO: this should probably be compiled so that you
         //don't have to call this when running
         //like maybe push the actual string
+      } else if (twig.charAt && twig.charAt(0) == "*") {
+        // todo: cache this function like rawpush something something
+        var treeNumber = parseInt(twig.substr(1))
+        //newPc = treesToLinesMap[treeNumber];
+        //lines.push(rawSetLastResult2(rawPushPc2(newPc)));
+        lines.push(rawSetLastResult2(rawPushPc2(treeNumber)));
+        //todo: someday go thru and after all is done replace these with the raw newPc version
       } else {
         lines.push(rawGet2(twig)) //rawGet
       }
@@ -481,13 +449,13 @@ window.thumbsDebug = (function () {
 var currentLineNumber = 0;
 var currentFileName = "";
 var pc = 0;
+var pcStack = []
 
 var callBag = [];
 var callBagStack = [];
 var lastResult = null;
 var secondToLastResult = null;
 var currentScope = globalScope;
-var callStack = [currentScope];
 
 var rawStart = function () {
   callBagStack.push(callBag);
@@ -522,6 +490,18 @@ var makeCachingSystem = function (fn, name) {
   }
 }
 
+var rawPushPc = function (treeNumber /*newPc*/) {
+  newPc = treesToLinesMap[treeNumber];
+  pcStack.push(pc);
+  pc = newPc
+}
+
+var rawSetLastResult = function (lr) {
+  lastResult = lr;
+}
+
+var rawSetLastResult2 = makeCachingSystem(rawSetLastResult, "set Last result")
+var rawPushPc2 = makeCachingSystem(rawPushPc, "pushPc")
 var rawGet2 = makeCachingSystem(rawGet, "get")
 var rawGetForString2 = makeCachingSystem(rawGetForString, "get-for-string")
 var rawAdd2 = makeCachingSystem(rawAdd, "add")
@@ -593,12 +573,18 @@ var debugExecLine = function (execLine) {
 var run = function (code, options) {
   var finalLines = []
   options = options || {}
-  _.defaults(options, {debug: true})
+  _.defaults(options, {debug: false})
   var codeTree = code;
   if (isString(code)) codeTree = codeToTree(code, options.fileName);
   treeToLines(codeTree, options.fileName, finalLines);
   var execLine = execLineMaker(finalLines, options)
+  
+  // for now skip running the code
+  return
   execLines(execLine, options.debug, finalLines)
+
+  console.log("trees to lines map")
+  console.log(treesToLinesMap)
 }
 
 var runFile = function (file) {
