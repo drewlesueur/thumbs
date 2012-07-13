@@ -212,6 +212,7 @@ var codeToTree = function (code, fileName) {
   //todo: return an a lisp-like array based off the code.
   var parsed = parensParser(code)
   console.log(parsed)
+  console.log(JSON.stringify(parsed))
   return parsed;
 }
 
