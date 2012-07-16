@@ -2,9 +2,15 @@ setModule("parens-parser", function () { return function (code) {
   var isArray = function (obj) { return toString.call(obj) == '[object Array]'; }
   var i = 0, ret, codeLength = code.length, breakSignal = "BREAK!! xyzzy";
   var incIndex = function () { i += 1 }
-  var innerParse = function () {
-    var inColon = false, colonIndentWidth = 0,
-        indentWidth = 0, indenting = true;
+  var indenting = true;
+  var indentWidth = 0;
+  var innerParse = function (options) {
+    // this innerParse mehtod is recursive
+    // would it be easier to do the indentation
+    // handling if it were iterative instead of recursive?
+    options = options || {}
+    var inColon = ("inColon" in options) ? options.inColon : false;
+    var colonIndentWidth = ("colonIndentWidth" in options) ? options.colonIndentWidth : 0;
     var lastGroup = function () { return group[group.length - 1] }
     var setLastGroup = function (x) { group[group.length - 1] = x }
     var secondTolastGroup = function () { return group[group.length - 2] }
@@ -19,22 +25,36 @@ setModule("parens-parser", function () { return function (code) {
       lastGroup().unshift(func)
     }
 
-    var handleOuterFuncCall = function () {
+    var handleOuterFuncCall = function (options) {
       var funcOutsideParens = lastCharIsEndParens() || word.length
-      addWord(); handleStartParens();
+      addWord();
+      var ret = handleStartParens(options);
       if (funcOutsideParens) { joinLastTwo() }
+      return ret;
     }
-    var handleStartParens = function () { incIndex(); nestedParens(); }
-    var handleEndParens = function () { handleSpace(); return breakSignal; }
+    var handleStartParens = function (options) { 
+      incIndex();
+      return nestedParens(options);
+    }
+    var handleEndParens = function () {
+      handleSpace();
+      return breakSignal;
+    }
     var addWord = function () { 
       if (word.length) { group.push(word) };
       if (inDot) { joinLastTwo(); inDot = false; }
       resetWord();
     }
-    var nestedParens = function () {
-      group.push(innerParse());
+    var nestedParens = function (options) {
+      var ret = innerParse(options)
+      group.push(ret);
+      if (inColon) { 
+        ret = checkForCloseColon() 
+        if (ret == breakSignal) console.log("yay!")
+      }
       // do I need this next line?
       if (inDot) { joinLastTwo(); inDot = false; }
+      return ret
     }
     var resetWord = function () { word = "" }
     var handleSpace = function () { addWord();}
@@ -55,31 +75,35 @@ setModule("parens-parser", function () { return function (code) {
     }, nextIsntSpaceOrTab = function () { 
       var nextChr = code.charAt(i + 1);
       return !(nextChr == " " || nextChr == "\t")
-    }, isAnyNextLine = function () { return chr == " " || chr == "\t"
+    }, isAnyNextLine = function () { return chr == "\n" || chr == "\r"
+    }, checkForCloseColon = function () {
+      if (inColon && nextIsntSpaceOrTab()
+          && colonIndentWidth >= indentWidth) {
+        return handleEndColon()
+      }
     }, manageIndentation = function () {
       if (indenting) {
-        if (isSpaceOrTab()) {
-          indentWidth++
-          if (inColon && nextIsntSpaceOrTab()
-              && colonIndentWidth == indentWidth) {
-            handleEndColon()
-          }
-        }
-        else if (isAnyNextLine) { indentWidth = 0 }
+        if (isSpaceOrTab()) { indentWidth++; return checkForCloseColon(); }
+        else if (isAnyNextLine()) { indentWidth = 0 }
         else { indenting = false }
       } else {
-        if (isAnyNextLine) {indenting = true; indentWidth = 0}
+        if (isAnyNextLine()) {
+          indenting = true; indentWidth = 0;
+          return checkForCloseColon()
+        }
       }
     }, isStartColon = function () { return chr == ":" 
     }, handleStartColon = function () {
-      inColon = true;
-      colonIndentWidth = indentWidth;
-      handleOuterFuncCall()
+      console.log("colon indent " + indentWidth)
+      return handleOuterFuncCall({
+        inColon: true,
+        colonIndentWidth: indentWidth
+      })
     }, handleEndColon = function () {
-      inColon = false;
-      handleEndParens();
+      //i--;
+      return handleEndParens();
     }, handleCode = function () {
-      manageIndentation()
+      if (manageIndentation() == breakSignal) return breakSignal;
       if (isStartParens())  return handleOuterFuncCall();
       if (isEndParens()) return handleEndParens()
       if (isSpaceLike()) return handleSpace()
