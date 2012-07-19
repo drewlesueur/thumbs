@@ -8,6 +8,7 @@ setModule("parens-parser", function () { return function (code) {
     // this innerParse mehtod is recursive
     // would it be easier to do the indentation
     // handling if it were iterative instead of recursive?
+    // looks easier this way.
     options = options || {}
     var inColon = ("inColon" in options) ? options.inColon : false;
     var colonIndentWidth = ("colonIndentWidth" in options) ? options.colonIndentWidth : 0;
@@ -38,6 +39,8 @@ setModule("parens-parser", function () { return function (code) {
     }
     var handleEndParens = function () {
       handleSpace();
+      // close all open parens
+      if (inColon) i--;
       return breakSignal;
     }
     var addWord = function () { 
@@ -100,8 +103,8 @@ setModule("parens-parser", function () { return function (code) {
         colonIndentWidth: indentWidth
       })
     }, handleEndColon = function () {
-      //i--;
-      return handleEndParens();
+      handleSpace();
+      return breakSignal;
     }, handleCode = function () {
       if (manageIndentation() == breakSignal) return breakSignal;
       if (isStartParens())  return handleOuterFuncCall();
